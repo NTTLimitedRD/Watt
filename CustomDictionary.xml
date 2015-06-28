@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Dictionary>
+	<Words>
+		<Recognized>
+			<Word>initialise</Word>
+			<Word>initialiser</Word>
+		</Recognized>
+		<Compound>
+			<Term PreferredAlternate="DiData">didata</Term>
+			<Term PreferredAlternate="IntelliDoc">intellidoc</Term>
+			<Term PreferredAlternate="NuGet">nuget</Term>
+		</Compound>
+		<DiscreteExceptions>
+			<Term>Di</Term>
+			<Term>Intelli</Term>
+		</DiscreteExceptions>
+	</Words>
+	<Acronyms>
+		<CasingExceptions>
+			<Acronym>API</Acronym>
+			<Acronym>Cloud</Acronym>
+			<Acronym>FDT</Acronym>
+			<Acronym>Rx</Acronym>
+			<Acronym>Di</Acronym>
+			<Acronym>DAC</Acronym>
+			<Acronym>dacpac</Acronym>
+		</CasingExceptions>
+	</Acronyms>
+</Dictionary>
