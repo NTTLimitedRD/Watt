@@ -93,33 +93,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 
 			requestBuilder.EnsureAttachedToClient();
 
-			ObjectContent postBodyContent = null;
-			if (postBody != null)
-			{
-				if (String.IsNullOrWhiteSpace(mediaType))
-					throw new ArgumentException("Argument cannot be null, empty, or composed entirely of whitespace: 'contentType'.", "mediaType");
-
-				MediaTypeFormatter mediaTypeFormatter = requestBuilder.GetMediaTypeFormatter(mediaType);
-				if (mediaTypeFormatter == null)
-				{
-					throw new InvalidOperationException(
-						String.Format(
-							"None of the configured media-type formatters can handle content of type '{0}'.",
-							mediaType
-						)
-					);
-				}
-
-				postBodyContent = new ObjectContent(
-					postBody.GetType(),
-					postBody,
-					mediaTypeFormatter,
-					mediaType
-				);
-			}
-
-			using (postBodyContent)
-			using (HttpRequestMessage request = requestBuilder.BuildRequestMessage(HttpMethod.Post, postBodyContent))
+			using (HttpRequestMessage request = requestBuilder.BuildRequestMessage(HttpMethod.Post, postBody, mediaType))
 			{
 				return await requestBuilder.HttpClient.SendAsync(request, cancellationToken);
 			}
@@ -160,6 +134,37 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		///		The HTTP request builder.
 		/// </param>
 		/// <param name="putBody">
+		///		An optional object to be used as the the request body.
+		/// </param>
+		/// <param name="mediaType">
+		///		If <paramref name="putBody"/> is specified, the media type to be used 
+		/// </param>
+		/// <param name="cancellationToken">
+		///		An optional cancellation token that can be used to cancel the asynchronous operation.
+		/// </param>
+		/// <returns>
+		///		An <see cref="HttpResponseMessage"/> representing the response.
+		/// </returns>
+		public static async Task<HttpResponseMessage> PutAsync(this IHttpRequestBuilder requestBuilder, object putBody = null, string mediaType = null, CancellationToken cancellationToken = default(CancellationToken))
+		{
+			if (requestBuilder == null)
+				throw new ArgumentNullException("requestBuilder");
+
+			requestBuilder.EnsureAttachedToClient();
+
+			using (HttpRequestMessage request = requestBuilder.BuildRequestMessage(HttpMethod.Put, putBody, mediaType))
+			{
+				return await requestBuilder.HttpClient.SendAsync(request, cancellationToken);
+			}
+		}
+
+		/// <summary>
+		///		Asynchronously execute the request as an HTTP PUT.
+		/// </summary>
+		/// <param name="requestBuilder">
+		///		The HTTP request builder.
+		/// </param>
+		/// <param name="putBody">
 		///		<see cref="HttpContent"/> representing the request body.
 		/// </param>
 		/// <param name="cancellationToken">
@@ -179,6 +184,37 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			requestBuilder.EnsureAttachedToClient();
 
 			using (HttpRequestMessage request = requestBuilder.BuildRequestMessage(HttpMethod.Put, putBody))
+			{
+				return await requestBuilder.HttpClient.SendAsync(request, cancellationToken);
+			}
+		}
+
+		/// <summary>
+		///		Asynchronously execute the request as an HTTP PATCH.
+		/// </summary>
+		/// <param name="requestBuilder">
+		///		The HTTP request builder.
+		/// </param>
+		/// <param name="patchBody">
+		///		An optional object to be used as the the request body.
+		/// </param>
+		/// <param name="mediaType">
+		///		If <paramref name="patchBody"/> is specified, the media type to be used 
+		/// </param>
+		/// <param name="cancellationToken">
+		///		An optional cancellation token that can be used to cancel the asynchronous operation.
+		/// </param>
+		/// <returns>
+		///		An <see cref="HttpResponseMessage"/> representing the response.
+		/// </returns>
+		public static async Task<HttpResponseMessage> PatchAsync(this IHttpRequestBuilder requestBuilder, object patchBody = null, string mediaType = null, CancellationToken cancellationToken = default(CancellationToken))
+		{
+			if (requestBuilder == null)
+				throw new ArgumentNullException("requestBuilder");
+
+			requestBuilder.EnsureAttachedToClient();
+
+			using (HttpRequestMessage request = requestBuilder.BuildRequestMessage(OtherHttpMethods.Patch, patchBody, mediaType))
 			{
 				return await requestBuilder.HttpClient.SendAsync(request, cancellationToken);
 			}
@@ -272,7 +308,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		}
 
 		/// <summary>
-		///		Asynchronously perform an HTTP POST request, serialising the request as JSON.
+		///		Asynchronously perform an HTTP POST request, serialising the request from JSON.
 		/// </summary>
 		/// <param name="requestBuilder">
 		///		The HTTP request builder.
@@ -289,6 +325,172 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		public static Task<HttpResponseMessage> PostAsJsonAsync(this IHttpRequestBuilder requestBuilder, object postBody, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			return requestBuilder.PostAsync(postBody, "application/json", cancellationToken);
+		}
+
+		/// <summary>
+		///		Asynchronously perform an HTTP PUT request, serialising the request from JSON.
+		/// </summary>
+		/// <param name="requestBuilder">
+		///		The HTTP request builder.
+		/// </param>
+		/// <param name="putBody">
+		///		The object that will be serialised into the request body.
+		/// </param>
+		/// <param name="cancellationToken">
+		///		An optional cancellation token that can be used to cancel the operation.
+		/// </param>
+		/// <returns>
+		///		A <see cref="Task{HttpResponseMessage}"/> representing the asynchronous request, whose result is the response message.
+		/// </returns>
+		public static Task<HttpResponseMessage> PutAsJsonAsync(this IHttpRequestBuilder requestBuilder, object putBody, CancellationToken cancellationToken = default(CancellationToken))
+		{
+			return requestBuilder.PutAsync(putBody, "application/json", cancellationToken);
+		}
+
+		/// <summary>
+		///		Asynchronously perform an HTTP PATCH request, serialising the request from JSON.
+		/// </summary>
+		/// <param name="requestBuilder">
+		///		The HTTP request builder.
+		/// </param>
+		/// <param name="patchBody">
+		///		The object that will be serialised into the request body.
+		/// </param>
+		/// <param name="cancellationToken">
+		///		An optional cancellation token that can be used to cancel the operation.
+		/// </param>
+		/// <returns>
+		///		A <see cref="Task{HttpResponseMessage}"/> representing the asynchronous request, whose result is the response message.
+		/// </returns>
+		public static Task<HttpResponseMessage> PatchAsJsonAsync(this IHttpRequestBuilder requestBuilder, object patchBody, CancellationToken cancellationToken = default(CancellationToken))
+		{
+			return requestBuilder.PatchAsync(patchBody, "application/json", cancellationToken);
+		}
+
+		/// <summary>
+		///		Asynchronously perform an HTTP POST request, serialising the request from XML.
+		/// </summary>
+		/// <param name="requestBuilder">
+		///		The HTTP request builder.
+		/// </param>
+		/// <param name="postBody">
+		///		The object that will be serialised into the request body.
+		/// </param>
+		/// <param name="cancellationToken">
+		///		An optional cancellation token that can be used to cancel the operation.
+		/// </param>
+		/// <returns>
+		///		A <see cref="Task{HttpResponseMessage}"/> representing the asynchronous request, whose result is the response message.
+		/// </returns>
+		public static Task<HttpResponseMessage> PostAsXmlAsync(this IHttpRequestBuilder requestBuilder, object postBody, CancellationToken cancellationToken = default(CancellationToken))
+		{
+			return requestBuilder.PostAsync(postBody, "text/xml", cancellationToken);
+		}
+
+		/// <summary>
+		///		Asynchronously perform an HTTP PUT request, serialising the request from XML.
+		/// </summary>
+		/// <param name="requestBuilder">
+		///		The HTTP request builder.
+		/// </param>
+		/// <param name="putBody">
+		///		The object that will be serialised into the request body.
+		/// </param>
+		/// <param name="cancellationToken">
+		///		An optional cancellation token that can be used to cancel the operation.
+		/// </param>
+		/// <returns>
+		///		A <see cref="Task{HttpResponseMessage}"/> representing the asynchronous request, whose result is the response message.
+		/// </returns>
+		public static Task<HttpResponseMessage> PutAsXmlAsync(this IHttpRequestBuilder requestBuilder, object putBody, CancellationToken cancellationToken = default(CancellationToken))
+		{
+			return requestBuilder.PutAsync(putBody, "text/xml", cancellationToken);
+		}
+
+		/// <summary>
+		///		Asynchronously perform an HTTP PATCH request, serialising the request from XML.
+		/// </summary>
+		/// <param name="requestBuilder">
+		///		The HTTP request builder.
+		/// </param>
+		/// <param name="patchBody">
+		///		The object that will be serialised into the request body.
+		/// </param>
+		/// <param name="cancellationToken">
+		///		An optional cancellation token that can be used to cancel the operation.
+		/// </param>
+		/// <returns>
+		///		A <see cref="Task{HttpResponseMessage}"/> representing the asynchronous request, whose result is the response message.
+		/// </returns>
+		public static Task<HttpResponseMessage> PatchAsXmlAsync(this IHttpRequestBuilder requestBuilder, object patchBody, CancellationToken cancellationToken = default(CancellationToken))
+		{
+			return requestBuilder.PatchAsync(patchBody, "text/xml", cancellationToken);
+		}
+
+		/// <summary>
+		///		Build and configure a new HTTP request message.
+		/// </summary>
+		/// <param name="requestBuilder">
+		///		The HTTP request builder.
+		/// </param>
+		/// <param name="method">
+		///		The HTTP request method to use.
+		/// </param>
+		/// <param name="requestBody">
+		///		An optional object representing representing the request body.
+		/// </param>
+		/// <param name="mediaType">
+		///		The request body's media type.
+		/// 
+		///		Required if <paramref name="requestBody"/> is not <c>null</c>.
+		/// </param>
+		/// <returns>
+		///		The configured <see cref="HttpRequestMessage"/>.
+		/// </returns>
+		public static HttpRequestMessage BuildRequestMessage(this IHttpRequestBuilder requestBuilder, HttpMethod method, object requestBody, string mediaType)
+		{
+			if (requestBuilder == null)
+				throw new ArgumentNullException("requestBuilder");
+
+			if (method == null)
+				throw new ArgumentNullException("method");
+
+			HttpContent requestContent = null;
+			try
+			{
+				if (requestBody != null)
+				{
+					if (String.IsNullOrWhiteSpace(mediaType))
+						throw new ArgumentException("Argument cannot be null, empty, or composed entirely of whitespace: 'contentType'.", "mediaType");
+
+					MediaTypeFormatter mediaTypeFormatter = requestBuilder.GetMediaTypeFormatter(mediaType);
+					if (mediaTypeFormatter == null)
+					{
+						throw new InvalidOperationException(
+							String.Format(
+								"None of the configured media-type formatters can handle content of type '{0}'.",
+								mediaType
+							)
+						);
+					}
+
+					requestContent = new ObjectContent(
+						requestBody.GetType(),
+						requestBody,
+						mediaTypeFormatter,
+						mediaType
+					);
+				}
+
+				return requestBuilder.BuildRequestMessage(method, requestContent);
+			}
+			catch
+			{
+				using (requestContent)
+				{
+					throw;
+				}
+			}
 		}
 
 		#endregion // Invoke
@@ -338,7 +540,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		}
 
 		/// <summary>
-		///		Asynchronously perform an HTTP POST request, serialising the request as JSON, and deserialising the response.
+		///		Asynchronously perform an HTTP POST request, serialising the request from JSON, and deserialising the response.
 		/// </summary>
 		/// <typeparam name="TResponse">
 		///		The type into to which the response should be deserialised.
@@ -361,7 +563,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		}
 
 		/// <summary>
-		///		Asynchronously perform an HTTP POST request, serialising the request as XML, and deserialising the response (which is expected to be XML).
+		///		Asynchronously perform an HTTP POST request, serialising the request from XML, and deserialising the response (which is expected to be XML).
 		/// </summary>
 		/// <typeparam name="TResponse">
 		///		The type into to which the response should be deserialised.
@@ -421,7 +623,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		}
 
 		/// <summary>
-		///		Asynchronously perform an HTTP PUT request, serialising the request as JSON, and deserialising the response.
+		///		Asynchronously perform an HTTP PUT request, serialising the request from JSON, and deserialising the response.
 		/// </summary>
 		/// <typeparam name="TResponse">
 		///		The type into to which the response should be deserialised.
@@ -444,7 +646,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		}
 
 		/// <summary>
-		///		Asynchronously perform an HTTP PUT request, serialising the request as XML, and deserialising the response.
+		///		Asynchronously perform an HTTP PUT request, serialising the request from XML, and deserialising the response.
 		/// </summary>
 		/// <typeparam name="TResponse">
 		///		The type into to which the response should be deserialised.
@@ -467,7 +669,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		}
 
 		/// <summary>
-		///		Asynchronously perform an HTTP PUT request, serialising the request as JSON, and deserialising the response (which is expected to be JSON).
+		///		Asynchronously perform an HTTP PUT request, serialising the request from JSON, and deserialising the response (which is expected to be JSON).
 		/// </summary>
 		/// <typeparam name="TResponse">
 		///		The type into to which the response should be deserialised.

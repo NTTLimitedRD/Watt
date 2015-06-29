@@ -11,6 +11,8 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 	/// </summary>
 	public static class HttpClientExtensions
 	{
+		// TODO: Extension methods for invoking IHttpRequestBuilder / IHttpRequestBuilder<TContext>.
+
 		/// <summary>
 		///		Build a request for the <see cref="HttpClient"/>.
 		/// </summary>
