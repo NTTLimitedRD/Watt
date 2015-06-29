@@ -20,6 +20,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{1A1ABC
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Watt.Tests", "Watt.Tests\Watt.Tests.csproj", "{382BEDB5-43C3-4C28-AADC-09FA680FD210}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{EF8AFCD9-D631-4BD8-8394-B4BA4B6D02F8}"
+	ProjectSection(SolutionItems) = preProject
+		NuGet\Watt.nuspec = NuGet\Watt.nuspec
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
