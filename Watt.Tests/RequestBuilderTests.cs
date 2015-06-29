@@ -13,7 +13,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit.Tests
 	using Mocks;
 
 	/// <summary>
-	///		Unit-tests for <see cref="HttpRequestBuilder"/>.
+	///		Unit-tests for <see cref="HttpRequestBuilder{TContext}"/>.
 	/// </summary>
 	[TestClass]
 	public sealed class RequestBuilderTests
@@ -296,108 +296,6 @@ namespace DD.Cloud.WebApi.TemplateToolkit.Tests
 		}
 
 		/// <summary>
-		///		Verify that a request builder can build a request with an absolute and then relative template URI (with query parameters) with deferred values that come from a supplied context value.
-		/// </summary>
-		[TestMethod]
-		public void Can_Build_Request_RelativeTemplateUriWithQuery_DeferredValues_FromContext()
-		{
-			Uri baseUri = new Uri("http://localhost:1234/");
-
-			HttpRequestBuilder<TestParameterContext> requestBuilder =
-				HttpRequestBuilder.Create<TestParameterContext>(baseUri)
-					.WithRelativeRequestUri("{action}/{id}?flag={flag?}")
-					.WithTemplateParameter("action", context => context.Action)
-					.WithTemplateParameter("id", context => context.Id)
-					.WithTemplateParameter("flag", context => context.Flag);
-
-			TestParameterContext testParameterContext = new TestParameterContext
-			{
-				Action = "foo",
-				Id = 1,
-				Flag = true
-			};
-			using (HttpRequestMessage requestMessage = requestBuilder.BuildRequestMessage(HttpMethod.Get, testParameterContext))
-			{
-				Assert.AreEqual(
-					new Uri(baseUri, "foo/1?flag=True"),
-					requestMessage.RequestUri
-				);
-			}
-
-			testParameterContext.Flag = false;
-			using (HttpRequestMessage requestMessage = requestBuilder.BuildRequestMessage(HttpMethod.Get, testParameterContext))
-			{
-				Assert.AreEqual(
-					new Uri(baseUri, "foo/1?flag=False"),
-					requestMessage.RequestUri
-				);
-			}
-
-			testParameterContext.Action = "diddly";
-			testParameterContext.Id = -17;
-			testParameterContext.Flag = null;
-			using (HttpRequestMessage requestMessage = requestBuilder.BuildRequestMessage(HttpMethod.Get, testParameterContext))
-			{
-				Assert.AreEqual(
-					new Uri(baseUri, "diddly/-17"),
-					requestMessage.RequestUri
-				);
-			}
-		}
-
-		/// <summary>
-		///		Verify that a request builder can build a request with an absolute and then relative template URI (with query parameters) with deferred values that come from the request builder's default (intrinsic) context.
-		/// </summary>
-		[TestMethod]
-		public void Can_Build_Request_RelativeTemplateUriWithQuery_DeferredValues_FromDefaultContext()
-		{
-			Uri baseUri = new Uri("http://localhost:1234/");
-
-			TestParameterContext testParameterContext = new TestParameterContext
-			{
-				Action = "foo",
-				Id = 1,
-				Flag = true
-			};
-
-			HttpRequestBuilder<TestParameterContext> requestBuilder =
-				HttpRequestBuilder.Create<TestParameterContext>(baseUri)
-					.WithRelativeRequestUri("{action}/{id}?flag={flag?}")
-					.WithContext(testParameterContext)
-					.WithTemplateParameter("action", context => context.Action)
-					.WithTemplateParameter("id", context => context.Id)
-					.WithTemplateParameter("flag", context => context.Flag);
-
-			using (HttpRequestMessage requestMessage = requestBuilder.BuildRequestMessage(HttpMethod.Get))
-			{
-				Assert.AreEqual(
-					new Uri(baseUri, "foo/1?flag=True"),
-					requestMessage.RequestUri
-				);
-			}
-
-			testParameterContext.Flag = false;
-			using (HttpRequestMessage requestMessage = requestBuilder.BuildRequestMessage(HttpMethod.Get))
-			{
-				Assert.AreEqual(
-					new Uri(baseUri, "foo/1?flag=False"),
-					requestMessage.RequestUri
-				);
-			}
-
-			testParameterContext.Action = "diddly";
-			testParameterContext.Id = -17;
-			testParameterContext.Flag = null;
-			using (HttpRequestMessage requestMessage = requestBuilder.BuildRequestMessage(HttpMethod.Get))
-			{
-				Assert.AreEqual(
-					new Uri(baseUri, "diddly/-17"),
-					requestMessage.RequestUri
-				);
-			}
-		}
-
-		/// <summary>
 		///		Verify that a request builder can build a request with an absolute and then relative URI with query parameters.
 		/// </summary>
 		[TestMethod]
@@ -582,39 +480,6 @@ namespace DD.Cloud.WebApi.TemplateToolkit.Tests
 			catch (InvalidOperationException)
 			{
 				// Pass
-			}
-		}
-
-		/// <summary>
-		///		A parameter-resolution context class used for tests.
-		/// </summary>
-		sealed class TestParameterContext
-		{
-			/// <summary>
-			///		The "Action" parameter.
-			/// </summary>
-			public string Action
-			{
-				get;
-				set;
-			}
-
-			/// <summary>
-			///		The "Id" parameter.
-			/// </summary>
-			public int Id
-			{
-				get;
-				set;
-			}
-
-			/// <summary>
-			///		The "Flag" parameter.
-			/// </summary>
-			public bool? Flag
-			{
-				get;
-				set;
 			}
 		}
 	}

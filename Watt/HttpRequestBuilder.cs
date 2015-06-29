@@ -9,7 +9,6 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 	/// <summary>
 	///		Builds and submits HTTP requests for an <see cref="System.Net.Http.HttpClient"/>.
 	/// </summary>
-	[DebuggerDisplay("{RequestUri}")]
 	public static class HttpRequestBuilder
 	{
 		#region Constants

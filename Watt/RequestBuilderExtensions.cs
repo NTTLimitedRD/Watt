@@ -16,7 +16,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 	/// </summary>
 	public static class RequestBuilderExtensions
 	{
-		#region Invocation
+		#region Invoke
 
 		/// <summary>
 		///		Asynchronously execute the request as an HTTP HEAD.
@@ -63,6 +63,63 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			requestBuilder.EnsureAttachedToClient();
 
 			using (HttpRequestMessage request = requestBuilder.BuildRequestMessage(HttpMethod.Get))
+			{
+				return await requestBuilder.HttpClient.SendAsync(request, cancellationToken);
+			}
+		}
+
+		/// <summary>
+		///		Asynchronously execute the request as an HTTP POST.
+		/// </summary>
+		/// <param name="requestBuilder">
+		///		The HTTP request builder.
+		/// </param>
+		/// <param name="postBody">
+		///		An optional object to be used as the the request body.
+		/// </param>
+		/// <param name="mediaType">
+		///		If <paramref name="postBody"/> is specified, the media type to be used 
+		/// </param>
+		/// <param name="cancellationToken">
+		///		An optional cancellation token that can be used to cancel the asynchronous operation.
+		/// </param>
+		/// <returns>
+		///		An <see cref="HttpResponseMessage"/> representing the response.
+		/// </returns>
+		public static async Task<HttpResponseMessage> PostAsync(this IHttpRequestBuilder requestBuilder, object postBody = null, string mediaType = null, CancellationToken cancellationToken = default(CancellationToken))
+		{
+			if (requestBuilder == null)
+				throw new ArgumentNullException("requestBuilder");
+
+			requestBuilder.EnsureAttachedToClient();
+
+			ObjectContent postBodyContent = null;
+			if (postBody != null)
+			{
+				if (String.IsNullOrWhiteSpace(mediaType))
+					throw new ArgumentException("Argument cannot be null, empty, or composed entirely of whitespace: 'contentType'.", "mediaType");
+
+				MediaTypeFormatter mediaTypeFormatter = requestBuilder.GetMediaTypeFormatter(mediaType);
+				if (mediaTypeFormatter == null)
+				{
+					throw new InvalidOperationException(
+						String.Format(
+							"None of the configured media-type formatters can handle content of type '{0}'.",
+							mediaType
+						)
+					);
+				}
+
+				postBodyContent = new ObjectContent(
+					postBody.GetType(),
+					postBody,
+					mediaTypeFormatter,
+					mediaType
+				);
+			}
+
+			using (postBodyContent)
+			using (HttpRequestMessage request = requestBuilder.BuildRequestMessage(HttpMethod.Post, postBodyContent))
 			{
 				return await requestBuilder.HttpClient.SendAsync(request, cancellationToken);
 			}
@@ -215,31 +272,28 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		}
 
 		/// <summary>
-		///		Get the first media-type formatter that can handle the specified media type.
+		///		Asynchronously perform an HTTP POST request, serialising the request as JSON.
 		/// </summary>
 		/// <param name="requestBuilder">
 		///		The HTTP request builder.
 		/// </param>
-		/// <param name="mediaType">
-		///		The media type to match.
+		/// <param name="postBody">
+		///		The object that will be serialised into the request body.
+		/// </param>
+		/// <param name="cancellationToken">
+		///		An optional cancellation token that can be used to cancel the operation.
 		/// </param>
 		/// <returns>
-		///		The media-type formatter, or <c>null</c> if none of the request builder's configured media-type formatters can handle the specified media type.
+		///		A <see cref="Task{HttpResponseMessage}"/> representing the asynchronous request, whose result is the response message.
 		/// </returns>
-		public static MediaTypeFormatter GetMediaTypeFormatter(this IHttpRequestBuilder requestBuilder, string mediaType)
+		public static Task<HttpResponseMessage> PostAsJsonAsync(this IHttpRequestBuilder requestBuilder, object postBody, CancellationToken cancellationToken = default(CancellationToken))
 		{
-			if (requestBuilder == null)
-				throw new ArgumentNullException("requestBuilder");
-
-			if (String.IsNullOrWhiteSpace(mediaType))
-				throw new ArgumentException("Argument cannot be null, empty, or composed entirely of whitespace: 'mediaType'.", "mediaType");
-
-			return requestBuilder.MediaTypeFormatters.FirstOrDefault(
-				formatter => formatter.MediaTypeMappings.Any(
-					mapping => mapping.MediaType.MediaType == mediaType
-				)
-			);
+			return requestBuilder.PostAsync(postBody, "application/json", cancellationToken);
 		}
+
+		#endregion // Invoke
+
+		#region Invoke and deserialise response
 
 		/// <summary>
 		///		Asynchronously perform an HTTP GET request, deserialising the response.
@@ -355,51 +409,14 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			if (requestBuilder == null)
 				throw new ArgumentNullException("requestBuilder");
 
-			HttpResponseMessage response = null;
-			ObjectContent requestContent = null;
-			try
+			using (HttpResponseMessage response = await requestBuilder.PostAsync(postBody, mediaType, cancellationToken))
 			{
-				if (postBody != null)
-				{
-					if (String.IsNullOrWhiteSpace(mediaType))
-						throw new ArgumentException("Argument cannot be null, empty, or composed entirely of whitespace: 'contentType'.", "mediaType");
+				if (response.StatusCode == HttpStatusCode.NoContent || response.Content == null)
+					return default(TResponse);
 
-					MediaTypeFormatter mediaTypeFormatter = requestBuilder.GetMediaTypeFormatter(mediaType);
-					if (mediaTypeFormatter == null)
-					{
-						throw new InvalidOperationException(
-							String.Format(
-								"None of the configured media-type formatters can handle content of type '{0}'.",
-								mediaType
-							)
-						);
-					}
+				response.EnsureSuccessStatusCode();
 
-					requestContent = new ObjectContent(
-						postBody.GetType(),
-						postBody,
-						mediaTypeFormatter,
-						mediaType
-					);
-				}
-
-				using (response = await requestBuilder.PostAsync(requestContent, cancellationToken))
-				{
-					if (response.StatusCode == HttpStatusCode.NoContent || response.Content == null)
-						return default(TResponse);
-
-					response.EnsureSuccessStatusCode();
-
-					return await response.Content.ReadAsAsync<TResponse>(requestBuilder.MediaTypeFormatters, cancellationToken);
-				}
-			}
-			catch
-			{
-				using (requestContent)
-				using (response)
-				{
-					throw;
-				}
+				return await response.Content.ReadAsAsync<TResponse>(requestBuilder.MediaTypeFormatters, cancellationToken);
 			}
 		}
 
@@ -523,7 +540,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			}
 		}
 
-		#endregion // Invocation
+		#endregion // Invoke and deserialise response
 
 		#region Configuration
 
@@ -1056,6 +1073,37 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		}
 
 		#endregion // Configuration
+
+		#region Media type formatters
+
+		/// <summary>
+		///		Get the first media-type formatter that can handle the specified media type.
+		/// </summary>
+		/// <param name="requestBuilder">
+		///		The HTTP request builder.
+		/// </param>
+		/// <param name="mediaType">
+		///		The media type to match.
+		/// </param>
+		/// <returns>
+		///		The media-type formatter, or <c>null</c> if none of the request builder's configured media-type formatters can handle the specified media type.
+		/// </returns>
+		public static MediaTypeFormatter GetMediaTypeFormatter(this IHttpRequestBuilder requestBuilder, string mediaType)
+		{
+			if (requestBuilder == null)
+				throw new ArgumentNullException("requestBuilder");
+
+			if (String.IsNullOrWhiteSpace(mediaType))
+				throw new ArgumentException("Argument cannot be null, empty, or composed entirely of whitespace: 'mediaType'.", "mediaType");
+
+			return requestBuilder.MediaTypeFormatters.FirstOrDefault(
+				formatter => formatter.MediaTypeMappings.Any(
+					mapping => mapping.MediaType.MediaType == mediaType
+				)
+			);
+		}
+
+		#endregion // Media type formatters
 
 		#region Helpers
 

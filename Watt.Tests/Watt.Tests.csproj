@@ -86,6 +86,7 @@
     <CodeAnalysisDictionary Include="..\CustomDictionary.xml">
       <Link>Properties\CustomDictionary.xml</Link>
     </CodeAnalysisDictionary>
+    <Compile Include="RequestBuilderContextTests.cs" />
     <Compile Include="RequestBuilderTests.cs" />
     <Compile Include="UnitTestBase.cs" />
     <Compile Include="UriTemplateTests.cs" />
