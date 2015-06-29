@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Net.Http.Formatting;
 
-namespace DD.Cloud.WebApi.TemplateToolkit
+namespace DD.Cloud.WebApi.TemplateToolkit.Utilities
 {
 	/// <summary>
 	///		Equality comparer for media-type formatters.

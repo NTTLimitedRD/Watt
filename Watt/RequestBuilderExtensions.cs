@@ -209,7 +209,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 
 			requestBuilder.EnsureAttachedToClient();
 
-			using (HttpRequestMessage request = requestBuilder.BuildRequestMessage(ExtendedHttpMethod.Patch, patchBody))
+			using (HttpRequestMessage request = requestBuilder.BuildRequestMessage(OtherHttpMethods.Patch, patchBody))
 			{
 				return await requestBuilder.HttpClient.SendAsync(request, cancellationToken);
 			}

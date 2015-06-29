@@ -5,7 +5,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 	/// <summary>
 	///		Additional standard HTTP methods.
 	/// </summary>
-	public static class ExtendedHttpMethod
+	public static class OtherHttpMethods
 	{
 		/// <summary>
 		///		The HTTP PATCH method.

@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Net.Http.Formatting;
 
 namespace DD.Cloud.WebApi.TemplateToolkit
 {
+	using Utilities;
+
 	/// <summary>
 	///		Builds and submits HTTP requests for an <see cref="System.Net.Http.HttpClient"/>.
 	/// </summary>

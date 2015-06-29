@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http.Headers;
 
-namespace DD.Cloud.WebApi.TemplateToolkit
+namespace DD.Cloud.WebApi.TemplateToolkit.Utilities
 {
 	/// <summary>
 	///		Extension method for <see cref="HttpRequestHeaders"/>
