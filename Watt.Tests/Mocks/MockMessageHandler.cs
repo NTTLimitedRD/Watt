@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace DD.Cloud.WebApi.TemplateToolkit.Tests.Mocks
 {
 	/// <summary>
-	///		Mock <see cref="DelegatingHandler"/> that raises an event to receive and respond to a message.
+	///		Mock <see cref="DelegatingHandler"/> that calls an arbitrary delegate to receive and respond to a message.
 	/// </summary>
 	public sealed class MockMessageHandler
 		: DelegatingHandler
