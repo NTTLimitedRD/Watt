@@ -389,11 +389,16 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			if (requestBuilder == null)
 				throw new ArgumentNullException("requestBuilder");
 
+			if (jsonFormatter == null)
+				jsonFormatter = HttpRequestBuilder.DefaultMediaTypeFormatterFactories.Json();
+
+			if (jsonFormatter == null)
+				throw new InvalidOperationException("DefaultMediaTypeFormatterFactories.Json returned null.");
+
 			return
-				requestBuilder.WithMediaTypeFormatters(
-					jsonFormatter ?? new JsonMediaTypeFormatter()
-				)
-				.ExpectJson(onlyJson: true);
+				requestBuilder
+					.WithMediaTypeFormatters(jsonFormatter)
+					.ExpectJson(onlyJson: true);
 		}
 
 		/// <summary>
@@ -416,11 +421,16 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			if (requestBuilder == null)
 				throw new ArgumentNullException("requestBuilder");
 
+			if (xmlFormatter == null)
+				xmlFormatter = HttpRequestBuilder.DefaultMediaTypeFormatterFactories.Xml();
+
+			if (xmlFormatter == null)
+				throw new InvalidOperationException("DefaultMediaTypeFormatterFactories.Xml returned null.");
+
 			return
-				requestBuilder.WithMediaTypeFormatters(
-					xmlFormatter ?? new XmlMediaTypeFormatter()
-				)
-				.ExpectXml(onlyXml: true);
+				requestBuilder
+					.WithMediaTypeFormatters(xmlFormatter)
+					.ExpectXml(onlyXml: true);
 		}
 
 		/// <summary>
@@ -510,8 +520,9 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 				throw new ArgumentNullException("requestBuilder");
 
 			return requestBuilder.WithMediaTypeFormatters(
-				new JsonMediaTypeFormatter(),
-				new XmlMediaTypeFormatter()
+				HttpRequestBuilder.DefaultMediaTypeFormatterFactories.All.Select(
+					mediaTypeFormatterFactory => mediaTypeFormatterFactory()
+				)
 			);
 		}
 

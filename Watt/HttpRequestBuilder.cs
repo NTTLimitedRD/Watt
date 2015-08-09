@@ -5,6 +5,7 @@ using System.Net.Http.Formatting;
 
 namespace DD.Cloud.WebApi.TemplateToolkit
 {
+	using System.Collections.Generic;
 	using Utilities;
 
 	/// <summary>
@@ -97,5 +98,73 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 
 			return HttpRequestBuilder<TContext>.Create(requestUri);
 		}
+
+		#region DefaultMediaTypeFormatterFactories
+
+		/// <summary>
+		///		Factory delegates used to create default <see cref="MediaTypeFormatter"/>s when none are supplied.
+		/// </summary>
+		public static class DefaultMediaTypeFormatterFactories
+		{
+			/// <summary>
+			///		Factory for the default JSON media-type formatter to use when one is not supplied.
+			/// </summary>
+			static Func<JsonMediaTypeFormatter> _json = () => new JsonMediaTypeFormatter();
+
+			/// <summary>
+			///		Factory for the default XML media-type formatter to use when one is not supplied.
+			/// </summary>
+			static Func<XmlMediaTypeFormatter> _xml = () => new XmlMediaTypeFormatter();
+
+			/// <summary>
+			///		Factory for the default JSON media-type formatter to use when one is not supplied.
+			/// </summary>
+			public static Func<JsonMediaTypeFormatter> Json
+			{
+				get
+				{
+					return _json;
+				}
+				set
+				{
+					if (value == null)
+						throw new ArgumentNullException("value", "Property cannot be null: 'Json'.");
+
+					_json = value;
+				}
+			}
+
+			/// <summary>
+			///		Factory for the default XML media-type formatter to use when one is not supplied.
+			/// </summary>
+			public static Func<XmlMediaTypeFormatter> Xml
+			{
+				get
+				{
+					return _xml;
+				}
+				set
+				{
+					if (value == null)
+						throw new ArgumentNullException("value", "Property cannot be null: 'Xml'.");
+
+					_xml = value;
+				}
+			}
+
+			/// <summary>
+			///		All default media-type formatters.
+			/// </summary>
+			public static IEnumerable<Func<MediaTypeFormatter>> All
+			{
+				get
+				{
+					yield return _json;
+					yield return _xml;
+				}
+			}
+		}
+
+		#endregion // DefaultMediaTypeFormatterFactories
 	}
 }

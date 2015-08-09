@@ -49,7 +49,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		/// <summary>
 		///		The request URI.
 		/// </summary>
-		readonly Uri														_requestUri;
+		readonly Uri																	_requestUri;
 
 		/// <summary>
 		///		Is the request URI a template?
