@@ -51,8 +51,22 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		/// <summary>
 		///		Build a URI from the template.
 		/// </summary>
+		/// <param name="templateParameters">
+		///		A dictionary containing the template parameters.
+		/// </param>
+		/// <returns>
+		///		The generated URI.
+		/// </returns>
+		public Uri Populate(IDictionary<string, string> templateParameters)
+		{
+			return Populate(null, templateParameters);
+		}
+
+		/// <summary>
+		///		Build a URI from the template.
+		/// </summary>
 		/// <param name="baseUri">
-		///		The base URI.
+		///		The base URI, or <c>null</c> to generate a relative URI.
 		/// </param>
 		/// <param name="templateParameters">
 		///		A dictionary containing the template parameters.
@@ -62,19 +76,21 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		/// </returns>
 		public Uri Populate(Uri baseUri, IDictionary<string, string> templateParameters)
 		{
-			if (baseUri == null)
-				throw new ArgumentNullException("baseUri");
-
-			if (!baseUri.IsAbsoluteUri)
-				throw new UriTemplateException("URI '{0}' is not an absolute URI.", baseUri);
+			if (baseUri != null && !baseUri.IsAbsoluteUri)
+				throw new UriTemplateException("Base URI '{0}' is not an absolute URI.", baseUri);
 
 			if (templateParameters == null)
 				throw new ArgumentNullException("templateParameters");
 
 			TemplateEvaluationContext evaluationContext = new TemplateEvaluationContext(templateParameters);
-			StringBuilder uriBuilder = new StringBuilder(
-				baseUri.GetComponents(UriComponents.Scheme | UriComponents.StrongAuthority, UriFormat.UriEscaped)
-			);
+			StringBuilder uriBuilder = new StringBuilder();
+			if (baseUri != null)
+			{
+				uriBuilder.Append(
+					baseUri.GetComponents(UriComponents.Scheme | UriComponents.StrongAuthority, UriFormat.UriEscaped)
+				);
+			}
+
 			if (_uriSegments.Count > 0)
 			{
 				foreach (UriSegment uriSegment in _uriSegments)
@@ -116,7 +132,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 					appendSegment(_querySegments[segmentIndex], '&');
 			}
 
-			return new Uri(uriBuilder.ToString());
+			return new Uri(uriBuilder.ToString(), UriKind.RelativeOrAbsolute);
 		}
 	}
 }

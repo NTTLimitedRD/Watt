@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Formatting;
 using System.Net.Http.Headers;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace DD.Cloud.WebApi.TemplateToolkit
 {
@@ -16,417 +13,6 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 	/// </summary>
 	public static class RequestBuilderExtensions
 	{
-		#region Invoke
-
-		/// <summary>
-		///		Asynchronously execute the request as an HTTP HEAD.
-		/// </summary>
-		/// <param name="requestBuilder">
-		///		The HTTP request builder.
-		/// </param>
-		/// <param name="cancellationToken">
-		///		An optional cancellation token that can be used to cancel the asynchronous operation.
-		/// </param>
-		/// <returns>
-		///		An <see cref="HttpResponseMessage"/> representing the response.
-		/// </returns>
-		public static Task<HttpResponseMessage> HeadAsync(this IHttpRequestBuilder requestBuilder, CancellationToken cancellationToken = default(CancellationToken))
-		{
-			if (requestBuilder == null)
-				throw new ArgumentNullException("requestBuilder");
-
-			requestBuilder.EnsureAttachedToClient();
-
-			using (HttpRequestMessage request = requestBuilder.BuildRequestMessage(HttpMethod.Head))
-			{
-				return requestBuilder.HttpClient.SendAsync(request, cancellationToken);
-			}
-		}
-
-		/// <summary>
-		///		Asynchronously execute the request as an HTTP GET.
-		/// </summary>
-		/// <param name="requestBuilder">
-		///		The HTTP request builder.
-		/// </param>
-		/// <param name="cancellationToken">
-		///		An optional cancellation token that can be used to cancel the asynchronous operation.
-		/// </param>
-		/// <returns>
-		///		An <see cref="HttpResponseMessage"/> representing the response.
-		/// </returns>
-		public static async Task<HttpResponseMessage> GetAsync(this IHttpRequestBuilder requestBuilder, CancellationToken cancellationToken = default(CancellationToken))
-		{
-			if (requestBuilder == null)
-				throw new ArgumentNullException("requestBuilder");
-
-			requestBuilder.EnsureAttachedToClient();
-
-			using (HttpRequestMessage request = requestBuilder.BuildRequestMessage(HttpMethod.Get))
-			{
-				return await requestBuilder.HttpClient.SendAsync(request, cancellationToken);
-			}
-		}
-
-		/// <summary>
-		///		Asynchronously execute the request as an HTTP POST.
-		/// </summary>
-		/// <param name="requestBuilder">
-		///		The HTTP request builder.
-		/// </param>
-		/// <param name="postBody">
-		///		An optional object to be used as the the request body.
-		/// </param>
-		/// <param name="mediaType">
-		///		If <paramref name="postBody"/> is specified, the media type to be used 
-		/// </param>
-		/// <param name="cancellationToken">
-		///		An optional cancellation token that can be used to cancel the asynchronous operation.
-		/// </param>
-		/// <returns>
-		///		An <see cref="HttpResponseMessage"/> representing the response.
-		/// </returns>
-		public static async Task<HttpResponseMessage> PostAsync(this IHttpRequestBuilder requestBuilder, object postBody = null, string mediaType = null, CancellationToken cancellationToken = default(CancellationToken))
-		{
-			if (requestBuilder == null)
-				throw new ArgumentNullException("requestBuilder");
-
-			requestBuilder.EnsureAttachedToClient();
-
-			using (HttpRequestMessage request = requestBuilder.BuildRequestMessage(HttpMethod.Post, postBody, mediaType))
-			{
-				return await requestBuilder.HttpClient.SendAsync(request, cancellationToken);
-			}
-		}
-
-		/// <summary>
-		///		Asynchronously execute the request as an HTTP POST.
-		/// </summary>
-		/// <param name="requestBuilder">
-		///		The HTTP request builder.
-		/// </param>
-		/// <param name="postBody">
-		///		Optional <see cref="HttpContent"/> representing the request body.
-		/// </param>
-		/// <param name="cancellationToken">
-		///		An optional cancellation token that can be used to cancel the asynchronous operation.
-		/// </param>
-		/// <returns>
-		///		An <see cref="HttpResponseMessage"/> representing the response.
-		/// </returns>
-		public static async Task<HttpResponseMessage> PostAsync(this IHttpRequestBuilder requestBuilder, HttpContent postBody = null, CancellationToken cancellationToken = default(CancellationToken))
-		{
-			if (requestBuilder == null)
-				throw new ArgumentNullException("requestBuilder");
-
-			requestBuilder.EnsureAttachedToClient();
-
-			using (HttpRequestMessage request = requestBuilder.BuildRequestMessage(HttpMethod.Post, postBody))
-			{
-				return await requestBuilder.HttpClient.SendAsync(request, cancellationToken);
-			}
-		}
-
-		/// <summary>
-		///		Asynchronously execute the request as an HTTP PUT.
-		/// </summary>
-		/// <param name="requestBuilder">
-		///		The HTTP request builder.
-		/// </param>
-		/// <param name="putBody">
-		///		An optional object to be used as the the request body.
-		/// </param>
-		/// <param name="mediaType">
-		///		If <paramref name="putBody"/> is specified, the media type to be used 
-		/// </param>
-		/// <param name="cancellationToken">
-		///		An optional cancellation token that can be used to cancel the asynchronous operation.
-		/// </param>
-		/// <returns>
-		///		An <see cref="HttpResponseMessage"/> representing the response.
-		/// </returns>
-		public static async Task<HttpResponseMessage> PutAsync(this IHttpRequestBuilder requestBuilder, object putBody = null, string mediaType = null, CancellationToken cancellationToken = default(CancellationToken))
-		{
-			if (requestBuilder == null)
-				throw new ArgumentNullException("requestBuilder");
-
-			requestBuilder.EnsureAttachedToClient();
-
-			using (HttpRequestMessage request = requestBuilder.BuildRequestMessage(HttpMethod.Put, putBody, mediaType))
-			{
-				return await requestBuilder.HttpClient.SendAsync(request, cancellationToken);
-			}
-		}
-
-		/// <summary>
-		///		Asynchronously execute the request as an HTTP PUT.
-		/// </summary>
-		/// <param name="requestBuilder">
-		///		The HTTP request builder.
-		/// </param>
-		/// <param name="putBody">
-		///		<see cref="HttpContent"/> representing the request body.
-		/// </param>
-		/// <param name="cancellationToken">
-		///		An optional cancellation token that can be used to cancel the asynchronous operation.
-		/// </param>
-		/// <returns>
-		///		An <see cref="HttpResponseMessage"/> representing the response.
-		/// </returns>
-		public static async Task<HttpResponseMessage> PutAsync(this IHttpRequestBuilder requestBuilder, HttpContent putBody, CancellationToken cancellationToken = default(CancellationToken))
-		{
-			if (requestBuilder == null)
-				throw new ArgumentNullException("requestBuilder");
-
-			if (putBody == null)
-				throw new ArgumentNullException("putBody");
-
-			requestBuilder.EnsureAttachedToClient();
-
-			using (HttpRequestMessage request = requestBuilder.BuildRequestMessage(HttpMethod.Put, putBody))
-			{
-				return await requestBuilder.HttpClient.SendAsync(request, cancellationToken);
-			}
-		}
-
-		/// <summary>
-		///		Asynchronously execute the request as an HTTP PATCH.
-		/// </summary>
-		/// <param name="requestBuilder">
-		///		The HTTP request builder.
-		/// </param>
-		/// <param name="patchBody">
-		///		An optional object to be used as the the request body.
-		/// </param>
-		/// <param name="mediaType">
-		///		If <paramref name="patchBody"/> is specified, the media type to be used 
-		/// </param>
-		/// <param name="cancellationToken">
-		///		An optional cancellation token that can be used to cancel the asynchronous operation.
-		/// </param>
-		/// <returns>
-		///		An <see cref="HttpResponseMessage"/> representing the response.
-		/// </returns>
-		public static async Task<HttpResponseMessage> PatchAsync(this IHttpRequestBuilder requestBuilder, object patchBody = null, string mediaType = null, CancellationToken cancellationToken = default(CancellationToken))
-		{
-			if (requestBuilder == null)
-				throw new ArgumentNullException("requestBuilder");
-
-			requestBuilder.EnsureAttachedToClient();
-
-			using (HttpRequestMessage request = requestBuilder.BuildRequestMessage(OtherHttpMethods.Patch, patchBody, mediaType))
-			{
-				return await requestBuilder.HttpClient.SendAsync(request, cancellationToken);
-			}
-		}
-
-		/// <summary>
-		///		Asynchronously execute the request as an HTTP PATCH.
-		/// </summary>
-		/// <param name="requestBuilder">
-		///		The HTTP request builder.
-		/// </param>
-		/// <param name="patchBody">
-		///		<see cref="HttpContent"/> representing the request body.
-		/// </param>
-		/// <param name="cancellationToken">
-		///		An optional cancellation token that can be used to cancel the asynchronous operation.
-		/// </param>
-		/// <returns>
-		///		An <see cref="HttpResponseMessage"/> representing the response.
-		/// </returns>
-		public static async Task<HttpResponseMessage> PatchAsync(this IHttpRequestBuilder requestBuilder, HttpContent patchBody, CancellationToken cancellationToken = default(CancellationToken))
-		{
-			if (requestBuilder == null)
-				throw new ArgumentNullException("requestBuilder");
-
-			if (patchBody == null)
-				throw new ArgumentNullException("patchBody");
-
-			requestBuilder.EnsureAttachedToClient();
-
-			using (HttpRequestMessage request = requestBuilder.BuildRequestMessage(OtherHttpMethods.Patch, patchBody))
-			{
-				return await requestBuilder.HttpClient.SendAsync(request, cancellationToken);
-			}
-		}
-
-		/// <summary>
-		///		Asynchronously execute the request as an HTTP DELETE.
-		/// </summary>
-		/// <param name="requestBuilder">
-		///		The HTTP request builder.
-		/// </param>
-		/// <param name="cancellationToken">
-		///		An optional cancellation token that can be used to cancel the asynchronous operation.
-		/// </param>
-		/// <returns>
-		///		An <see cref="HttpResponseMessage"/> representing the response.
-		/// </returns>
-		public static async Task<HttpResponseMessage> DeleteAsync(this IHttpRequestBuilder requestBuilder, CancellationToken cancellationToken = default(CancellationToken))
-		{
-			if (requestBuilder == null)
-				throw new ArgumentNullException("requestBuilder");
-
-			requestBuilder.EnsureAttachedToClient();
-
-			using (HttpRequestMessage request = requestBuilder.BuildRequestMessage(HttpMethod.Delete))
-			{
-				return await requestBuilder.HttpClient.SendAsync(request, cancellationToken);
-			}
-		}
-
-		/// <summary>
-		///		Asynchronously execute the request using the specified HTTP method.
-		/// </summary>
-		/// <param name="requestBuilder">
-		///		The HTTP request builder.
-		/// </param>
-		/// <param name="method">
-		///		An <see cref="HttpMethod"/> representing the method to use.
-		/// </param>
-		/// <param name="body">
-		///		Optional <see cref="HttpContent"/> representing the request body (if any).
-		/// </param>
-		/// <param name="cancellationToken">
-		///		An optional cancellation token that can be used to cancel the asynchronous operation.
-		/// </param>
-		/// <returns>
-		///		An <see cref="HttpResponseMessage"/> representing the response.
-		/// </returns>
-		public static async Task<HttpResponseMessage> SendAsync(this IHttpRequestBuilder requestBuilder, HttpMethod method, HttpContent body = null, CancellationToken cancellationToken = default(CancellationToken))
-		{
-			if (requestBuilder == null)
-				throw new ArgumentNullException("requestBuilder");
-
-			requestBuilder.EnsureAttachedToClient();
-
-			using (HttpRequestMessage request = requestBuilder.BuildRequestMessage(method, body))
-			{
-				return await requestBuilder.HttpClient.SendAsync(request, cancellationToken);
-			}
-		}
-
-		/// <summary>
-		///		Asynchronously perform an HTTP POST request, serialising the request from JSON.
-		/// </summary>
-		/// <param name="requestBuilder">
-		///		The HTTP request builder.
-		/// </param>
-		/// <param name="postBody">
-		///		The object that will be serialised into the request body.
-		/// </param>
-		/// <param name="cancellationToken">
-		///		An optional cancellation token that can be used to cancel the operation.
-		/// </param>
-		/// <returns>
-		///		A <see cref="Task{HttpResponseMessage}"/> representing the asynchronous request, whose result is the response message.
-		/// </returns>
-		public static Task<HttpResponseMessage> PostAsJsonAsync(this IHttpRequestBuilder requestBuilder, object postBody, CancellationToken cancellationToken = default(CancellationToken))
-		{
-			return requestBuilder.PostAsync(postBody, "application/json", cancellationToken);
-		}
-
-		/// <summary>
-		///		Asynchronously perform an HTTP PUT request, serialising the request from JSON.
-		/// </summary>
-		/// <param name="requestBuilder">
-		///		The HTTP request builder.
-		/// </param>
-		/// <param name="putBody">
-		///		The object that will be serialised into the request body.
-		/// </param>
-		/// <param name="cancellationToken">
-		///		An optional cancellation token that can be used to cancel the operation.
-		/// </param>
-		/// <returns>
-		///		A <see cref="Task{HttpResponseMessage}"/> representing the asynchronous request, whose result is the response message.
-		/// </returns>
-		public static Task<HttpResponseMessage> PutAsJsonAsync(this IHttpRequestBuilder requestBuilder, object putBody, CancellationToken cancellationToken = default(CancellationToken))
-		{
-			return requestBuilder.PutAsync(putBody, "application/json", cancellationToken);
-		}
-
-		/// <summary>
-		///		Asynchronously perform an HTTP PATCH request, serialising the request from JSON.
-		/// </summary>
-		/// <param name="requestBuilder">
-		///		The HTTP request builder.
-		/// </param>
-		/// <param name="patchBody">
-		///		The object that will be serialised into the request body.
-		/// </param>
-		/// <param name="cancellationToken">
-		///		An optional cancellation token that can be used to cancel the operation.
-		/// </param>
-		/// <returns>
-		///		A <see cref="Task{HttpResponseMessage}"/> representing the asynchronous request, whose result is the response message.
-		/// </returns>
-		public static Task<HttpResponseMessage> PatchAsJsonAsync(this IHttpRequestBuilder requestBuilder, object patchBody, CancellationToken cancellationToken = default(CancellationToken))
-		{
-			return requestBuilder.PatchAsync(patchBody, "application/json", cancellationToken);
-		}
-
-		/// <summary>
-		///		Asynchronously perform an HTTP POST request, serialising the request from XML.
-		/// </summary>
-		/// <param name="requestBuilder">
-		///		The HTTP request builder.
-		/// </param>
-		/// <param name="postBody">
-		///		The object that will be serialised into the request body.
-		/// </param>
-		/// <param name="cancellationToken">
-		///		An optional cancellation token that can be used to cancel the operation.
-		/// </param>
-		/// <returns>
-		///		A <see cref="Task{HttpResponseMessage}"/> representing the asynchronous request, whose result is the response message.
-		/// </returns>
-		public static Task<HttpResponseMessage> PostAsXmlAsync(this IHttpRequestBuilder requestBuilder, object postBody, CancellationToken cancellationToken = default(CancellationToken))
-		{
-			return requestBuilder.PostAsync(postBody, "text/xml", cancellationToken);
-		}
-
-		/// <summary>
-		///		Asynchronously perform an HTTP PUT request, serialising the request from XML.
-		/// </summary>
-		/// <param name="requestBuilder">
-		///		The HTTP request builder.
-		/// </param>
-		/// <param name="putBody">
-		///		The object that will be serialised into the request body.
-		/// </param>
-		/// <param name="cancellationToken">
-		///		An optional cancellation token that can be used to cancel the operation.
-		/// </param>
-		/// <returns>
-		///		A <see cref="Task{HttpResponseMessage}"/> representing the asynchronous request, whose result is the response message.
-		/// </returns>
-		public static Task<HttpResponseMessage> PutAsXmlAsync(this IHttpRequestBuilder requestBuilder, object putBody, CancellationToken cancellationToken = default(CancellationToken))
-		{
-			return requestBuilder.PutAsync(putBody, "text/xml", cancellationToken);
-		}
-
-		/// <summary>
-		///		Asynchronously perform an HTTP PATCH request, serialising the request from XML.
-		/// </summary>
-		/// <param name="requestBuilder">
-		///		The HTTP request builder.
-		/// </param>
-		/// <param name="patchBody">
-		///		The object that will be serialised into the request body.
-		/// </param>
-		/// <param name="cancellationToken">
-		///		An optional cancellation token that can be used to cancel the operation.
-		/// </param>
-		/// <returns>
-		///		A <see cref="Task{HttpResponseMessage}"/> representing the asynchronous request, whose result is the response message.
-		/// </returns>
-		public static Task<HttpResponseMessage> PatchAsXmlAsync(this IHttpRequestBuilder requestBuilder, object patchBody, CancellationToken cancellationToken = default(CancellationToken))
-		{
-			return requestBuilder.PatchAsync(patchBody, "text/xml", cancellationToken);
-		}
-
 		/// <summary>
 		///		Build and configure a new HTTP request message.
 		/// </summary>
@@ -444,10 +30,13 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		/// 
 		///		Required if <paramref name="requestBody"/> is not <c>null</c>.
 		/// </param>
+		/// <param name="baseUri">
+		///		An optional base URI to use if the request builder does not already have an absolute request URI.
+		/// </param>
 		/// <returns>
 		///		The configured <see cref="HttpRequestMessage"/>.
 		/// </returns>
-		public static HttpRequestMessage BuildRequestMessage(this IHttpRequestBuilder requestBuilder, HttpMethod method, object requestBody, string mediaType)
+		public static HttpRequestMessage BuildRequestMessage(this IHttpRequestBuilder requestBuilder, HttpMethod method, object requestBody, string mediaType, Uri baseUri = null)
 		{
 			if (requestBuilder == null)
 				throw new ArgumentNullException("requestBuilder");
@@ -482,7 +71,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 					);
 				}
 
-				return requestBuilder.BuildRequestMessage(method, requestContent);
+				return requestBuilder.BuildRequestMessage(method, requestContent, baseUri);
 			}
 			catch
 			{
@@ -493,256 +82,34 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			}
 		}
 
-		#endregion // Invoke
-
-		#region Invoke and deserialise response
-
 		/// <summary>
-		///		Asynchronously perform an HTTP GET request, deserialising the response.
+		///		Build and configure a new HTTP request message.
 		/// </summary>
-		/// <typeparam name="TResponse">
-		///		The type into to which the response should be deserialised.
-		/// </typeparam>
 		/// <param name="requestBuilder">
 		///		The HTTP request builder.
 		/// </param>
-		/// <param name="cancellationToken">
-		///		An optional cancellation token that can be used to cancel the operation.
+		/// <param name="method">
+		///		The HTTP request method to use.
+		/// </param>
+		/// <param name="body">
+		///		Optional <see cref="HttpContent"/> representing representing the request body.
+		/// </param>
+		/// <param name="baseUri">
+		///		An optional base URI to use if the request builder does not already have an absolute request URI.
 		/// </param>
 		/// <returns>
-		///		A <see cref="Task{TResult}"/> representing the asynchronous request, whose result is the deserialised response.
+		///		The configured <see cref="HttpRequestMessage"/>.
 		/// </returns>
-		public static async Task<TResponse> GetAsync<TResponse>(this IHttpRequestBuilder requestBuilder, CancellationToken cancellationToken = default(CancellationToken))
+		public static HttpRequestMessage BuildRequestMessage(this IHttpRequestBuilder<Unit> requestBuilder, HttpMethod method, HttpContent body = null, Uri baseUri = null)
 		{
 			if (requestBuilder == null)
 				throw new ArgumentNullException("requestBuilder");
 
-			HttpResponseMessage response = null;
-			try
-			{
-				using (response = await requestBuilder.GetAsync(cancellationToken))
-				{
-					if (response.StatusCode == HttpStatusCode.NoContent || response.Content == null)
-						return default(TResponse);
+			if (method == null)
+				throw new ArgumentNullException("method");
 
-					response.EnsureSuccessStatusCode();
-
-					return await response.Content.ReadAsAsync<TResponse>(requestBuilder.MediaTypeFormatters, cancellationToken);
-				}
-			}
-			catch
-			{
-				using (response)
-				{
-					throw;
-				}
-			}
+			return requestBuilder.BuildRequestMessage(method, Unit.Value, body, baseUri);
 		}
-
-		/// <summary>
-		///		Asynchronously perform an HTTP POST request, serialising the request from JSON, and deserialising the response.
-		/// </summary>
-		/// <typeparam name="TResponse">
-		///		The type into to which the response should be deserialised.
-		/// </typeparam>
-		/// <param name="requestBuilder">
-		///		The HTTP request builder.
-		/// </param>
-		/// <param name="postBody">
-		///		The object that will be serialised into the request body.
-		/// </param>
-		/// <param name="cancellationToken">
-		///		An optional cancellation token that can be used to cancel the operation.
-		/// </param>
-		/// <returns>
-		///		A <see cref="Task{TResult}"/> representing the asynchronous request, whose result is the deserialised response.
-		/// </returns>
-		public static Task<TResponse> PostAsJsonAsync<TResponse>(this IHttpRequestBuilder requestBuilder, object postBody, CancellationToken cancellationToken = default(CancellationToken))
-		{
-			return requestBuilder.PostAsync<TResponse>(postBody, "application/json", cancellationToken);
-		}
-
-		/// <summary>
-		///		Asynchronously perform an HTTP POST request, serialising the request from XML, and deserialising the response (which is expected to be XML).
-		/// </summary>
-		/// <typeparam name="TResponse">
-		///		The type into to which the response should be deserialised.
-		/// </typeparam>
-		/// <param name="requestBuilder">
-		///		The HTTP request builder.
-		/// </param>
-		/// <param name="postBody">
-		///		The object that will be serialised into the request body.
-		/// </param>
-		/// <param name="cancellationToken">
-		///		An optional cancellation token that can be used to cancel the operation.
-		/// </param>
-		/// <returns>
-		///		A <see cref="Task{TResult}"/> representing the asynchronous request, whose result is the deserialised response.
-		/// </returns>
-		public static Task<TResponse> PostAsXmlAsync<TResponse>(this IHttpRequestBuilder requestBuilder, object postBody, CancellationToken cancellationToken = default(CancellationToken))
-		{
-			return requestBuilder.PostAsync<TResponse>(postBody, "text/xml", cancellationToken);
-		}
-
-		/// <summary>
-		///		Asynchronously perform an HTTP POST request, serialising the request, and deserialising the response.
-		/// </summary>
-		/// <typeparam name="TResponse">
-		///		The type into to which the response should be deserialised.
-		/// </typeparam>
-		/// <param name="requestBuilder">
-		///		The HTTP request builder.
-		/// </param>
-		/// <param name="postBody">
-		///		The object that will be serialised into the response body.
-		/// </param>
-		/// <param name="mediaType">
-		///		The request content type.
-		/// </param>
-		/// <param name="cancellationToken">
-		///		An optional cancellation token that can be used to cancel the operation.
-		/// </param>
-		/// <returns>
-		///		A <see cref="Task{TResult}"/> representing the asynchronous request, whose result is the deserialised response.
-		/// </returns>
-		public static async Task<TResponse> PostAsync<TResponse>(this IHttpRequestBuilder requestBuilder, object postBody, string mediaType, CancellationToken cancellationToken = default(CancellationToken))
-		{
-			if (requestBuilder == null)
-				throw new ArgumentNullException("requestBuilder");
-
-			using (HttpResponseMessage response = await requestBuilder.PostAsync(postBody, mediaType, cancellationToken))
-			{
-				if (response.StatusCode == HttpStatusCode.NoContent || response.Content == null)
-					return default(TResponse);
-
-				response.EnsureSuccessStatusCode();
-
-				return await response.Content.ReadAsAsync<TResponse>(requestBuilder.MediaTypeFormatters, cancellationToken);
-			}
-		}
-
-		/// <summary>
-		///		Asynchronously perform an HTTP PUT request, serialising the request from JSON, and deserialising the response.
-		/// </summary>
-		/// <typeparam name="TResponse">
-		///		The type into to which the response should be deserialised.
-		/// </typeparam>
-		/// <param name="requestBuilder">
-		///		The HTTP request builder.
-		/// </param>
-		/// <param name="putBody">
-		///		The object that will be serialised into the request body.
-		/// </param>
-		/// <param name="cancellationToken">
-		///		An optional cancellation token that can be used to cancel the operation.
-		/// </param>
-		/// <returns>
-		///		A <see cref="Task{TResult}"/> representing the asynchronous request, whose result is the deserialised response.
-		/// </returns>
-		public static Task<TResponse> PutAsJsonAsync<TResponse>(this IHttpRequestBuilder requestBuilder, object putBody, CancellationToken cancellationToken = default(CancellationToken))
-		{
-			return requestBuilder.PutAsync<TResponse>(putBody, "application/json", cancellationToken);
-		}
-
-		/// <summary>
-		///		Asynchronously perform an HTTP PUT request, serialising the request from XML, and deserialising the response.
-		/// </summary>
-		/// <typeparam name="TResponse">
-		///		The type into to which the response should be deserialised.
-		/// </typeparam>
-		/// <param name="requestBuilder">
-		///		The HTTP request builder.
-		/// </param>
-		/// <param name="putBody">
-		///		The object that will be serialised into the request body.
-		/// </param>
-		/// <param name="cancellationToken">
-		///		An optional cancellation token that can be used to cancel the operation.
-		/// </param>
-		/// <returns>
-		///		A <see cref="Task{TResult}"/> representing the asynchronous request, whose result is the deserialised response.
-		/// </returns>
-		public static Task<TResponse> PutAsXmlAsync<TResponse>(this IHttpRequestBuilder requestBuilder, object putBody, CancellationToken cancellationToken = default(CancellationToken))
-		{
-			return requestBuilder.PutAsync<TResponse>(putBody, "text/xml", cancellationToken);
-		}
-
-		/// <summary>
-		///		Asynchronously perform an HTTP PUT request, serialising the request from JSON, and deserialising the response (which is expected to be JSON).
-		/// </summary>
-		/// <typeparam name="TResponse">
-		///		The type into to which the response should be deserialised.
-		/// </typeparam>
-		/// <param name="requestBuilder">
-		///		The HTTP request builder.
-		/// </param>
-		/// <param name="putBody">
-		///		The object that will be serialised into the request body.
-		/// </param>
-		/// <param name="mediaType">
-		///		The request content type.
-		/// </param>
-		/// <param name="cancellationToken">
-		///		An optional cancellation token that can be used to cancel the operation.
-		/// </param>
-		/// <returns>
-		///		A <see cref="Task{TResult}"/> representing the asynchronous request, whose result is the deserialised response.
-		/// </returns>
-		public static async Task<TResponse> PutAsync<TResponse>(this IHttpRequestBuilder requestBuilder, object putBody, string mediaType, CancellationToken cancellationToken = default(CancellationToken))
-		{
-			if (requestBuilder == null)
-				throw new ArgumentNullException("requestBuilder");
-
-			HttpResponseMessage response = null;
-			ObjectContent requestContent = null;
-			try
-			{
-				if (putBody != null)
-				{
-					if (String.IsNullOrWhiteSpace(mediaType))
-						throw new ArgumentException("Argument cannot be null, empty, or composed entirely of whitespace: 'contentType'.", "mediaType");
-
-					MediaTypeFormatter mediaTypeFormatter = requestBuilder.GetMediaTypeFormatter(mediaType);
-					if (mediaTypeFormatter == null)
-					{
-						throw new InvalidOperationException(
-							String.Format(
-								"None of the configured media-type formatters can handle content of type '{0}'.",
-								mediaType
-							)
-						);
-					}
-
-					requestContent = new ObjectContent(
-						putBody.GetType(),
-						putBody,
-						mediaTypeFormatter,
-						mediaType
-					);
-				}
-
-				using (response = await requestBuilder.PutAsync(requestContent, cancellationToken))
-				{
-					if (response.StatusCode == HttpStatusCode.NoContent || response.Content == null)
-						return default(TResponse);
-
-					response.EnsureSuccessStatusCode();
-
-					return await response.Content.ReadAsAsync<TResponse>(requestBuilder.MediaTypeFormatters, cancellationToken);
-				}
-			}
-			catch
-			{
-				using (requestContent)
-				using (response)
-				{
-					throw;
-				}
-			}
-		}
-
-		#endregion // Invoke and deserialise response
 
 		#region Configuration
 

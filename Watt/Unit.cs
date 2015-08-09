@@ -5,5 +5,9 @@
 	/// </summary>
 	public struct Unit
 	{
+		/// <summary>
+		///		Singleton value for <see cref="Unit"/>.
+		/// </summary>
+		public static readonly Unit Value = new Unit();
 	}
 }

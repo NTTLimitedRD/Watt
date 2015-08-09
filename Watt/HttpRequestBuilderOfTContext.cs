@@ -47,11 +47,6 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		#region State
 
 		/// <summary>
-		///		The HTTP client to which requests will be submitted.
-		/// </summary>
-		readonly HttpClient													_httpClient;
-
-		/// <summary>
 		///		The request URI.
 		/// </summary>
 		readonly Uri														_requestUri;
@@ -93,21 +88,17 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		/// <summary>
 		///		Create a new HTTP request builder.
 		/// </summary>
-		/// <param name="httpClient">
-		///		The HTTP client to which requests will be submitted.
-		/// </param>
 		/// <param name="requestUri">
 		///		The request URI.
 		/// </param>
 		/// <param name="isTemplate">
 		///		Does the URI represent a template?
 		/// </param>
-		internal HttpRequestBuilder(HttpClient httpClient, Uri requestUri, bool isTemplate = false)
+		internal HttpRequestBuilder(Uri requestUri, bool isTemplate = false)
 		{
 			if (requestUri == null)
 				throw new ArgumentNullException("requestUri");
 
-			_httpClient = httpClient;
 			_requestUri = requestUri;
 			_isTemplate = isTemplate;
 			_requestConfigurationActions = NoConfigurationActions;
@@ -185,21 +176,6 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		/// <param name="requestBuilder">
 		///		The existing <see cref="HttpRequestBuilder{TContext}"/>.
 		/// </param>
-		/// <param name="httpClient">
-		///		The new <see cref="System.Net.Http.HttpClient"/>, or <c>null</c> if the new request builder should not be attached to a client.
-		/// </param>
-		protected HttpRequestBuilder(HttpRequestBuilder<TContext> requestBuilder, HttpClient httpClient)
-			: this(requestBuilder)
-		{
-			_httpClient = httpClient;
-		}
-
-		/// <summary>
-		///		Create a new HTTP request builder from an existing HTTP request builder, but attached to a new <see cref="System.Net.Http.HttpClient"/>.
-		/// </summary>
-		/// <param name="requestBuilder">
-		///		The existing <see cref="HttpRequestBuilder{TContext}"/>.
-		/// </param>
 		/// <param name="context">
 		///		The default object to be used by the request builder when resolving deferred template parameters.
 		/// </param>
@@ -223,7 +199,6 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			if (requestBuilder == null)
 				throw new ArgumentNullException("requestBuilder");
 
-			_httpClient = requestBuilder._httpClient;
 			_requestUri = requestBuilder._requestUri;
 			_isTemplate = requestBuilder._isTemplate;
 			_requestConfigurationActions = requestBuilder._requestConfigurationActions;
@@ -334,38 +309,12 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			if (requestUri == null)
 				throw new ArgumentNullException("requestUri");
 
-			return new HttpRequestBuilder<TContext>(
-				(HttpClient)null,
-				requestUri
-			);
+			return new HttpRequestBuilder<TContext>(requestUri);
 		}
 
 		#endregion // Construction
 
 		#region Properties
-
-		/// <summary>
-		///		Is the request builder attached to an <see cref="System.Net.Http.HttpClient"/>?
-		/// </summary>
-		public bool IsAttachedToClient
-		{
-			get
-			{
-				return _httpClient != null;
-			}
-		}
-
-		/// <summary>
-		///		The HTTP client to which requests will be submitted.
-		/// </summary>
-		[CanBeNull]
-		public HttpClient HttpClient
-		{
-			get
-			{
-				return _httpClient;
-			}
-		}
 
 		/// <summary>
 		///		The request URI.
@@ -453,40 +402,19 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		///		The request builder's absolute URI.
 		/// </returns>
 		/// <exception cref="InvalidOperationException">
-		///		The request builder has a <see cref="UriKind.Relative">relative</see> <see cref="Uri">URI</see> and is not attached to an <see cref="System.Net.Http.HttpClient"/> with an absolute <see cref="System.Net.Http.HttpClient.BaseAddress">base address</see>.
+		///		The request builder has a <see cref="UriKind.Relative">relative</see> <see cref="Uri">URI</see>.
 		/// </exception>
-		[NotNull]
 		public Uri EnsureAbsoluteUri()
 		{
 			Uri requestUri = _requestUri;
 			if (requestUri.IsAbsoluteUri)
 				return requestUri;
 
-			// Try falling back to getting base address from attached HttpClient,
-			if (IsAttachedToClient)
-			{
-				Uri baseUri = _httpClient.BaseAddress;
-				if (baseUri != null && baseUri.IsAbsoluteUri)
-					return new Uri(baseUri, requestUri);
-			}
-			
 			throw new InvalidOperationException("The HTTP request builder does not have an absolute URI.");
 		}
 
 		/// <summary>
-		///		Ensure that the <see cref="HttpRequestBuilder{TContext}"/> is attached to an <see cref="System.Net.Http.HttpClient"/>.
-		/// </summary>
-		/// <exception cref="InvalidOperationException">
-		///		The request builder is not attached to an HTTP client.
-		/// </exception>
-		public void EnsureAttachedToClient()
-		{
-			if (!IsAttachedToClient)
-				throw new InvalidOperationException("The HTTP request builder is not attached to an HTTP client.");
-		}
-
-		/// <summary>
-		///		Build and configure a new HTTP request message.
+		///		Build and configure a new HTTP request message using the request builder's default context (if any).
 		/// </summary>
 		/// <param name="httpMethod">
 		///		The HTTP request method to use.
@@ -494,12 +422,15 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		/// <param name="body">
 		///		Optional <see cref="HttpContent"/> representing the request body.
 		/// </param>
+		/// <param name="baseUri">
+		///		An optional base URI to use if the request builder does not already have an absolute request URI.
+		/// </param>
 		/// <returns>
 		///		The configured <see cref="HttpRequestMessage"/>.
 		/// </returns>
-		public HttpRequestMessage BuildRequestMessage(HttpMethod httpMethod, HttpContent body = null)
+		public HttpRequestMessage BuildRequestMessage(HttpMethod httpMethod, HttpContent body = null, Uri baseUri = null)
 		{
-			return BuildRequestMessage(httpMethod, default(TContext), body);
+			return BuildRequestMessage(httpMethod, default(TContext), body, baseUri);
 		}
 
 		/// <summary>
@@ -514,10 +445,13 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		/// <param name="body">
 		///		Optional <see cref="HttpContent"/> representing the request body.
 		/// </param>
+		/// <param name="baseUri">
+		///		An optional base URI to use if the request builder does not already have an absolute request URI.
+		/// </param>
 		/// <returns>
 		///		The configured <see cref="HttpRequestMessage"/>.
 		/// </returns>
-		public HttpRequestMessage BuildRequestMessage(HttpMethod httpMethod, TContext context, HttpContent body = null)
+		public HttpRequestMessage BuildRequestMessage(HttpMethod httpMethod, TContext context, HttpContent body = null, Uri baseUri = null)
 		{
 			if (httpMethod == null)
 				throw new ArgumentNullException("httpMethod");
@@ -525,16 +459,33 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			if (Equals(context, default(TContext)))
 				context = _context;
 
-			Uri requestUri = EnsureAbsoluteUri();
-			if (_isTemplate)
+			// Ensure we have an absolute URI.
+			// TODO: Tidy this up.
+			Uri requestUri = _requestUri;
+			if (!requestUri.IsAbsoluteUri)
 			{
-				Uri baseUri = new Uri(
+				if (baseUri == null)
+					throw new InvalidOperationException("Cannot build a request message; the request builder does not have an absolute request URI, and no base URI was supplied.");
+
+				// Make relative to base URI.
+				requestUri = new Uri(
+					baseUri,
+					requestUri
+				);
+			}
+			else
+			{
+				// Extract base URI to which request URI is already (by definition) relative.
+				baseUri = new Uri(
 					requestUri.GetComponents(
 						UriComponents.Scheme | UriComponents.StrongAuthority,
 						UriFormat.UriEscaped
 					)
 				);
+			}
 
+			if (_isTemplate)
+			{
 				UriTemplate template = new UriTemplate(
 					requestUri.GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped)
 				);
@@ -593,43 +544,6 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		#endregion // Invocation
 
 		#region Configuration
-
-		/// <summary>
-		///		Create a copy of the request builder with, but attached to the specified <see cref="System.Net.Http.HttpClient"/>.
-		/// </summary>
-		/// <param name="httpClient">
-		///		The HTTP client.
-		/// </param>
-		/// <returns>
-		///		A new <see cref="HttpRequestBuilder{TContext}"/>, or the existing <see cref="HttpRequestBuilder{TContext}"/> if it is already attached to the <see cref="System.Net.Http.HttpClient"/>.
-		/// </returns>
-		public HttpRequestBuilder<TContext> WithClient(HttpClient httpClient)
-		{
-			if (httpClient == null)
-				throw new ArgumentNullException("httpClient");
-
-			if (_httpClient == httpClient)
-				return this;
-
-			return new HttpRequestBuilder<TContext>(this, httpClient);
-		}
-
-		/// <summary>
-		///		Create a copy of the request builder with, but detached from its <see cref="System.Net.Http.HttpClient"/> (if any).
-		/// </summary>
-		/// <returns>
-		///		The new <see cref="HttpRequestBuilder{TContext}"/>.
-		/// </returns>
-		public HttpRequestBuilder<TContext> WithoutClient()
-		{
-			if (_httpClient == null)
-				return this;
-
-			return new HttpRequestBuilder<TContext>(
-				this,
-				(HttpClient)null
-			);
-		}
 
 		/// <summary>
 		///		Create a copy of the request builder with the specified base URI.

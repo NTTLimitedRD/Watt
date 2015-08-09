@@ -146,7 +146,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit.Tests
 			using (HttpClient client = new HttpClient(mockHandler))
 			{
 				HttpRequestBuilder<TestParameterContext> requestBuilder =
-					client.BuildRequest<TestParameterContext>(baseUri)
+					HttpRequestBuilder.Create<TestParameterContext>(baseUri)
 						.WithRelativeRequestUri("{action}/{id}?flag={flag?}")
 						.WithTemplateParameter("action", context => context.Action)
 						.WithTemplateParameter("id", context => context.Id)
@@ -157,19 +157,19 @@ namespace DD.Cloud.WebApi.TemplateToolkit.Tests
 				testParameterContext.Flag = true;
 
 				expectedUri = new Uri(baseUri, "foo/1?flag=True");
-                await requestBuilder.GetAsync(testParameterContext);
+                await client.GetAsync(requestBuilder, testParameterContext);
 
 				testParameterContext.Flag = false;
 
 				expectedUri = new Uri(baseUri, "foo/1?flag=False");
-				await requestBuilder.GetAsync(testParameterContext);
-
+				await client.GetAsync(requestBuilder, testParameterContext);
+				
 				testParameterContext.Action = "diddly";
 				testParameterContext.Id = -17;
 				testParameterContext.Flag = null;
 
 				expectedUri = new Uri(baseUri, "diddly/-17");
-				await requestBuilder.GetAsync(testParameterContext);
+				await client.GetAsync(requestBuilder, testParameterContext);
 			}
 		}
 

@@ -49,13 +49,14 @@ namespace DD.Cloud.WebApi.TemplateToolkit.Tests
 
 			using (HttpClient mockClient = new HttpClient(mockHandler))
 			{
-				HttpResponseMessage response = await
-					mockClient.BuildRequest(baseUri)
-						.WithRelativeRequestUri("foo/{variable}/bar")
-						.WithQueryParameter("diddly", "bonk")
-						.WithTemplateParameter("variable", 1234)
-						.WithTemplateParameter("diddly", "bonk")
-						.GetAsync();
+				HttpResponseMessage response =
+					await mockClient.GetAsync(
+						HttpRequestBuilder.Create(baseUri)
+							.WithRelativeRequestUri("foo/{variable}/bar")
+							.WithQueryParameter("diddly", "bonk")
+							.WithTemplateParameter("variable", 1234)
+							.WithTemplateParameter("diddly", "bonk")
+					);
 
 				using (response)
 				{
@@ -106,12 +107,12 @@ namespace DD.Cloud.WebApi.TemplateToolkit.Tests
 			using (HttpClient mockClient = new HttpClient(mockHandler))
 			{
 				HttpResponseMessage response = await
-					mockClient.BuildRequest(baseUri)
-						.WithRelativeRequestUri("foo/bar")
-						.ExpectJson()
-						.PostAsync(
-							new StringContent("{}")
-						);
+					mockClient.PostAsync(
+						HttpRequestBuilder.Create(baseUri)
+							.WithRelativeRequestUri("foo/bar")
+							.ExpectJson(),
+						postBody: new StringContent("{}")
+					);
 
 				using (response)
 				{
@@ -165,9 +166,12 @@ namespace DD.Cloud.WebApi.TemplateToolkit.Tests
 			using (HttpClient mockClient = new HttpClient(mockHandler))
 			{
 				int responseBody = await
-					mockClient.BuildJsonRequest(baseUri)
-						.WithRelativeRequestUri("foo/bar")
-						.PostAsJsonAsync<int>("1234");
+					mockClient.PostAsJsonAsync<int>(
+						HttpRequestBuilder.Create(baseUri)
+							.WithRelativeRequestUri("foo/bar")
+							.UseJson(),
+						postBody: "1234"
+					);
 
 				Assert.AreEqual(1234, responseBody);
 			}
@@ -347,139 +351,6 @@ namespace DD.Cloud.WebApi.TemplateToolkit.Tests
 					new Uri(baseUri, "foo/bar"),
 					requestMessage.RequestUri
 				);
-			}
-		}
-
-		/// <summary>
-		///		Verify that a request builder can build a request not attached to a client, with an absolute and then relative URI, then attach it to a client, and then perform a JSON-formatted HTTP POST request.
-		/// </summary>
-		/// <returns>
-		///		A <see cref="Task"/> representing asynchronous test execution.
-		/// </returns>
-		[TestMethod]
-		public async Task Can_Build_Detached_Request_RelativeUri_AttachToClient_PostAsJson()
-		{
-			Uri baseUri = new Uri("http://localhost:1234/");
-
-			MockMessageHandler mockHandler = new MockMessageHandler(
-				async request =>
-				{
-					Assert.IsNotNull(request);
-					Assert.AreEqual(HttpMethod.Post, request.Method);
-					Assert.AreEqual(
-						new Uri(baseUri, "foo/bar"),
-						request.RequestUri
-					);
-					Assert.AreEqual(1, request.Headers.Accept.Count);
-					Assert.AreEqual(
-						"application/json",
-						request.Headers.Accept.First().MediaType
-					);
-
-					string requestBody = await request.Content.ReadAsAsync<string>();
-					Assert.IsNotNull(requestBody);
-
-					return request.CreateResponse(
-						HttpStatusCode.OK,
-						Int32.Parse(requestBody),
-						new JsonMediaTypeFormatter()
-					);
-				}
-			);
-
-			using (HttpClient mockClient = new HttpClient(mockHandler))
-			{
-				HttpRequestBuilder<Unit> request =
-					HttpRequestBuilder.Create(baseUri)
-						.UseJson()
-						.WithRelativeRequestUri("foo/bar")
-						.WithClient(mockClient);
-
-				int responseBody = await request.PostAsJsonAsync<int>("1234");
-
-				Assert.AreEqual(1234, responseBody);
-			}
-		}
-
-		/// <summary>
-		///		Verify that a request builder can build a relative request not attached to a client, attach it to a client with an absolute base URI, and then perform a JSON-formatted HTTP POST request.
-		/// </summary>
-		/// <returns>
-		///		A <see cref="Task"/> representing asynchronous test execution.
-		/// </returns>
-		[TestMethod]
-		public async Task Can_Build_Detached_RelativeUri_Request_AttachToClient_PostAsJson()
-		{
-			Uri baseUri = new Uri("http://localhost:1234/");
-
-			MockMessageHandler mockHandler = new MockMessageHandler(
-				async request =>
-				{
-					Assert.IsNotNull(request);
-					Assert.AreEqual(HttpMethod.Post, request.Method);
-					Assert.AreEqual(
-						new Uri(baseUri, "foo/bar"),
-						request.RequestUri
-					);
-					Assert.AreEqual(1, request.Headers.Accept.Count);
-					Assert.AreEqual(
-						"application/json",
-						request.Headers.Accept.First().MediaType
-					);
-
-					string requestBody = await request.Content.ReadAsAsync<string>();
-					Assert.IsNotNull(requestBody);
-
-					return request.CreateResponse(
-						HttpStatusCode.OK,
-						Int32.Parse(requestBody),
-						new JsonMediaTypeFormatter()
-					);
-				}
-			);
-
-			using (HttpClient mockClient = new HttpClient(mockHandler))
-			{
-				mockClient.BaseAddress = baseUri;
-
-				HttpRequestBuilder<Unit> request =
-					HttpRequestBuilder.Create("foo/bar")
-						.UseJson();
-
-				int responseBody = await
-					request.WithClient(mockClient)
-						.PostAsJsonAsync<int>("1234");
-
-				Assert.AreEqual(1234, responseBody);
-			}
-		}
-
-		/// <summary>
-		///		Verify that a request builder cannot build a request not attached to a client, with an absolute and then relative URI, and then perform a JSON-formatted HTTP POST request without first attaching it to a client.
-		/// </summary>
-		/// <returns>
-		///		A <see cref="Task"/> representing asynchronous test execution.
-		/// </returns>
-		[TestMethod]
-		public async Task Cannot_Invoke_Detached_Request_RelativeUri_PostAsJson()
-		{
-			Uri baseUri = new Uri("http://localhost:1234/");
-
-			try
-			{
-				HttpRequestBuilder<Unit> request = HttpRequestBuilder.Create(baseUri);
-
-				await
-					request
-						.UseJson()
-						.WithRelativeRequestUri("foo/bar")
-						.PostAsJsonAsync<int>("1234");
-
-				Assert.Fail("Request builder invocation should have failed bacause it was not attached to an HttpClient.");
-			}
-			catch (InvalidOperationException)
-			{
-				// Pass
 			}
 		}
 	}

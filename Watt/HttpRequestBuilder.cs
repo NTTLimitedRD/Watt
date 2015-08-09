@@ -54,10 +54,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			if (requestUri == null)
 				throw new ArgumentNullException("requestUri");
 
-			return new HttpRequestBuilder<Unit>(
-				httpClient: null,
-				requestUri: requestUri
-			);
+			return new HttpRequestBuilder<Unit>(requestUri);
 		}
 
 		/// <summary>

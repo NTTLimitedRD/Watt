@@ -12,22 +12,6 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 	public interface IHttpRequestBuilder
 	{
 		/// <summary>
-		///		Is the request builder attached to an <see cref="System.Net.Http.HttpClient"/>?
-		/// </summary>
-		bool IsAttachedToClient
-		{
-			get;
-		}
-
-		/// <summary>
-		///		The HTTP client to which requests will be submitted.
-		/// </summary>
-		HttpClient HttpClient
-		{
-			get;
-		}
-
-		/// <summary>
 		///		The request URI.
 		/// </summary>
 		Uri RequestUri
@@ -58,7 +42,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		{
 			get;
 		}
-
+		
 		/// <summary>
 		///		Ensure that the <see cref="HttpRequestBuilder{TContext}"/> has an <see cref="UriKind.Absolute">absolute</see> <see cref="Uri">URI</see>.
 		/// </summary>
@@ -66,17 +50,10 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		///		The request builder's absolute URI.
 		/// </returns>
 		/// <exception cref="InvalidOperationException">
-		///		The request builder has a <see cref="UriKind.Relative">relative</see> <see cref="Uri">URI</see> and is not attached to an <see cref="System.Net.Http.HttpClient"/> with an absolute <see cref="System.Net.Http.HttpClient.BaseAddress">base address</see>.
+		///		The request builder has a <see cref="UriKind.Relative">relative</see> <see cref="Uri">URI</see>.
 		/// </exception>
+		[NotNull]
 		Uri EnsureAbsoluteUri();
-
-		/// <summary>
-		///		Ensure that the <see cref="HttpRequestBuilder{TContext}"/> is attached to an <see cref="System.Net.Http.HttpClient"/>.
-		/// </summary>
-		/// <exception cref="InvalidOperationException">
-		///		The request builder is not attached to an HTTP client.
-		/// </exception>
-		void EnsureAttachedToClient();
 
 		/// <summary>
 		///		Build and configure a new HTTP request message.
@@ -87,11 +64,14 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		/// <param name="body">
 		///		Optional <see cref="HttpContent"/> representing the request body.
 		/// </param>
+		/// <param name="baseUri">
+		///		An optional base URI to use if the request builder does not already have an absolute request URI.
+		/// </param>
 		/// <returns>
 		///		The configured <see cref="HttpRequestMessage"/>.
 		/// </returns>
 		[NotNull]
-		HttpRequestMessage BuildRequestMessage(HttpMethod httpMethod, HttpContent body = null);
+		HttpRequestMessage BuildRequestMessage(HttpMethod httpMethod, HttpContent body = null, Uri baseUri = null);
 	}
 
 	/// <summary>
@@ -110,8 +90,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		{
 			get;
 		}
-
-
+		
 		/// <summary>
 		///		Build and configure a new HTTP request message.
 		/// </summary>
@@ -124,10 +103,13 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		/// <param name="body">
 		///		Optional <see cref="HttpContent"/> representing the request body.
 		/// </param>
+		/// <param name="baseUri">
+		///		An optional base URI to use if the request builder does not already have an absolute request URI.
+		/// </param>
 		/// <returns>
 		///		The configured <see cref="HttpRequestMessage"/>.
 		/// </returns>
 		[NotNull]
-		HttpRequestMessage BuildRequestMessage(HttpMethod httpMethod, TContext context, HttpContent body = null);
+		HttpRequestMessage BuildRequestMessage(HttpMethod httpMethod, TContext context, HttpContent body = null, Uri baseUri = null);
 	}
 }
