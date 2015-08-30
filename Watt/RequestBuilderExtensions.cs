@@ -114,6 +114,29 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		#region Configuration
 
 		/// <summary>
+		///		Create a copy of the request builder, but with the specified request-configuration action.
+		/// </summary>
+		/// <param name="requestBuilder">
+		///		The HTTP request builder.
+		/// </param>
+		/// <param name="requestConfiguration">
+		///		A delegate that configures outgoing request messages.
+		/// </param>
+		/// <returns>
+		///		The new HTTP request builder.
+		/// </returns>
+		public static HttpRequestBuilder<Unit> WithRequestConfiguration(this HttpRequestBuilder<Unit> requestBuilder, Action<HttpRequestMessage> requestConfiguration)
+		{
+			if (requestBuilder == null)
+				throw new ArgumentNullException("requestBuilder");
+			if (requestConfiguration == null)
+				throw new ArgumentNullException("requestConfiguration");
+			return requestBuilder.WithRequestConfiguration(
+				(request, _) => requestConfiguration(request)
+			);
+		}
+
+		/// <summary>
 		///		Create a copy of the request builder that adds a header to each request.
 		/// </summary>
 		/// <typeparam name="TContext">
