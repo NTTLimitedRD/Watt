@@ -6,7 +6,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit.Utilities
 	/// <summary>
 	///		Equality comparer for media-type formatters.
 	/// </summary>
-	internal sealed class MediaTypeFormatterEqualityComparer
+	sealed class MediaTypeFormatterEqualityComparer
 		: EqualityComparer<MediaTypeFormatter>
 	{
 		/// <summary>

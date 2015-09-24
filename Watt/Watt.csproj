@@ -68,10 +68,13 @@
     <Compile Include="..\SolutionAssemblyInfo.cs">
       <Link>Properties\SolutionAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="ClientBuilderExtensions.cs" />
+    <Compile Include="HttpClientBuilder.cs" />
     <Compile Include="OtherHttpMethods.cs" />
     <Compile Include="HttpClientExtensions.cs" />
     <Compile Include="HttpRequestBuilderOfTContext.cs" />
     <Compile Include="HttpRequestBuilder.cs" />
+    <Compile Include="Utilities\DisposalHelpers.cs" />
     <Compile Include="Utilities\HttpRequestHeadersExtensions.cs" />
     <Compile Include="IHttpRequestBuilder.cs" />
     <Compile Include="Utilities\MediaTypeFormatterEqualityComparer.cs" />

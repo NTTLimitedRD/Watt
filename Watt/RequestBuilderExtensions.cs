@@ -727,7 +727,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		/// </returns>
 		static IDictionary<string, Func<TContext, string>> ToDeferredParameterDictionary<TContext, TParameters>(this TParameters parameters)
 		{
-			if (parameters == null)
+			if (Equals(parameters, null))
 				throw new ArgumentNullException("parameters");
 
 			Dictionary<string, Func<TContext, string>> parameterDictionary = new Dictionary<string, Func<TContext, string>>(StringComparer.OrdinalIgnoreCase);
