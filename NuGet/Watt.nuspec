@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
 	<metadata minClientVersion="2.8">
 		<id>Watt</id>
-		<version>1.0.1</version>
+		<version>1.0.2</version>
 		<title>WebAPI template toolkit</title>
 		<authors>adam.friedman@itaas.dimensiondata.com</authors>
 		<owners>Dimension Data</owners>
@@ -17,8 +17,7 @@
 			<group targetFramework="net45">
 				<dependency id="Newtonsoft.Json" version="[6.0.8, 6.1.0)" />
 
-				<dependency id="JetBrains.Annotations" version="[9.1.1, 9.2.0)" />
-				<dependency id="Microsoft.AspNet.WebApi.Client" version="[5.2.3, 5.3.0)" />
+				<dependency id="Microsoft.AspNet.WebApi.Client" version="[5.2.2, 5.3.0)" />
 				<dependency id="System.Collections.Immutable" version="[1.1.36, 1.2.0)" />
 			</group>
 		</dependencies>
