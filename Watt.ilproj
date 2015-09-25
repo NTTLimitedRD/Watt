@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Settings>
+  <!--Switches-->
+  <CopyAttributes Enabled="true" />
+  <UnionDuplicates Enabled="false" />
+  <Debug Enabled="1" />
+  <Internalize Enabled="true" />
+  <MergeXml Enabled="false" />
+  <!--Signing-->
+  <Sign Enabled="true" Delay="false">C:\Development\GitHub\DD\Watt\DDCloud-Public.snk</Sign>
+  <!--Logging-->
+  <Log Enabled="false"></Log>
+  <!--Assemblies-->
+  <Assemblies>
+    <Assembly>C:\Development\GitHub\DD\Watt\Watt\bin\Debug\DD.Cloud.WebApi.TemplateToolkit.dll</Assembly>
+    <Assembly>C:\Development\GitHub\DD\Watt\Watt\bin\Debug\System.Collections.Immutable.dll</Assembly>
+    <Primary>C:\Development\GitHub\DD\Watt\Watt\bin\Debug\DD.Cloud.WebApi.TemplateToolkit.dll</Primary>
+  </Assemblies>
+  <!--Output-->
+  <OutputAssembly>C:\Development\GitHub\DD\Watt\Stage\Watt.nupkg\lib\net45\DD.Cloud.WebApi.TemplateToolkit.dll</OutputAssembly>
+  <!--.NET Framework-->
+  <Framework>.NET Framework 4.6 Full</Framework>
+  <!--Merge Engine-->
+  <Engine Name="ILMerge" />
+</Settings>
