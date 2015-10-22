@@ -250,6 +250,58 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		}
 
 		/// <summary>
+		///		Create a copy of the request builder that adds an "If-None-Match" header to each request.
+		/// </summary>
+		/// <typeparam name="TContext">
+		///		The type of object used by the request builder when resolving deferred template parameters.
+		/// </typeparam>
+		/// <param name="requestBuilder">
+		///		The HTTP request builder.
+		/// </param>
+		/// <param name="headerValue">
+		///		The header value.
+		/// </param>
+		/// <returns>
+		///		The new <see cref="HttpRequestBuilder{TContext}"/>.
+		/// </returns>
+		public static HttpRequestBuilder<TContext> WithIfNoneMatchHeader<TContext>(this HttpRequestBuilder<TContext> requestBuilder, string headerValue)
+		{
+			if (requestBuilder == null)
+				throw new ArgumentNullException(nameof(requestBuilder));
+
+			if (headerValue == null)
+				throw new ArgumentNullException(nameof(headerValue));
+
+			return requestBuilder.WithHeader("If-None-Match", _ => headerValue);
+		}
+
+		/// <summary>
+		///		Create a copy of the request builder that adds an "If-None-Match" header with its value obtained from the specified delegate.
+		/// </summary>
+		/// <typeparam name="TContext">
+		///		The type of object used by the request builder when resolving deferred template parameters.
+		/// </typeparam>
+		/// <param name="requestBuilder">
+		///		The HTTP request builder.
+		/// </param>
+		/// <param name="getValue">
+		///		A delegate that returns the header value for each request.
+		/// </param>
+		/// <returns>
+		///		The new <see cref="HttpRequestBuilder{TContext}"/>.
+		/// </returns>
+		public static HttpRequestBuilder<TContext> WithIfNoneMatchHeader<TContext>(this HttpRequestBuilder<TContext> requestBuilder, Func<TContext, string> getValue)
+		{
+			if (requestBuilder == null)
+				throw new ArgumentNullException(nameof(requestBuilder));
+
+			if (getValue == null)
+				throw new ArgumentNullException(nameof(getValue));
+
+			return requestBuilder.WithHeader("If-None-Match", getValue);
+		}
+
+		/// <summary>
 		///		Create a copy of the request builder with the specified request URI template parameter.
 		/// </summary>
 		/// <typeparam name="TContext">

@@ -468,10 +468,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 					throw new InvalidOperationException("Cannot build a request message; the request builder does not have an absolute request URI, and no base URI was supplied.");
 
 				// Make relative to base URI.
-				requestUri = new Uri(
-					baseUri,
-					requestUri
-				);
+				requestUri = AppendRelativeUri(baseUri, requestUri);
 			}
 			else
 			{
@@ -572,7 +569,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 
 			return new HttpRequestBuilder<TContext>(
 				requestBuilder: this,
-				requestUri: new Uri(baseUri, _requestUri)
+				requestUri: AppendRelativeUri(baseUri, _requestUri)
 			);
 		}
 
@@ -637,7 +634,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 
 			return new HttpRequestBuilder<TContext>(
 				this,
-				new Uri(_requestUri, relativeUri),
+				AppendRelativeUri(_requestUri, relativeUri),
 				isTemplate: _isTemplate
 			);
 		}
@@ -1092,6 +1089,40 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		#endregion // Configuration
 
 		#region Helpers
+
+		/// <summary>
+		///		Append a relative URI to the specified base URI.
+		/// </summary>
+		/// <param name="baseUri">
+		///		The base URI.
+		/// 
+		///		A trailing "/" will be appended, if necessary.
+		/// </param>
+		/// <param name="relativeUri">
+		///		The relative URI to append.
+		/// </param>
+		/// <returns>
+		///		The concatenated URI.
+		/// </returns>
+		/// <remarks>
+		///		This function is required because, sometimes, appending of a relative path to a URI can behave counter-intuitively.
+		///		If the base URI does not have a trailing "/", then its last path segment is *replaced* by the relative UI. This is hardly ever what you actually want.
+		/// </remarks>
+		static Uri AppendRelativeUri(Uri baseUri, Uri relativeUri)
+		{
+			if (baseUri == null)
+				throw new ArgumentNullException("baseUri");
+
+			if (relativeUri == null)
+				throw new ArgumentNullException("relativeUri");
+
+			// Retain URI-concatenation semantics, except that we behave the same whether trailing slash is present or absent.
+			UriBuilder baseUriBuilder = new UriBuilder(baseUri);
+			if (!baseUriBuilder.Path.EndsWith("/", StringComparison.Ordinal))
+				baseUriBuilder.Path += "/";
+
+			return new Uri(baseUri, relativeUri);
+		}
 
 		/// <summary>
 		///		Merge the request builder's query parameters (if any) into the request URI.
