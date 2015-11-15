@@ -84,12 +84,11 @@ namespace DD.Cloud.WebApi.TemplateToolkit.Tests
 			HttpRequestBuilder<TestParameterContext> requestBuilder =
 				HttpRequestBuilder.Create<TestParameterContext>(baseUri)
 					.WithRelativeRequestUri("{action}/{id}?flag={flag?}")
-					.WithContext(testParameterContext)
 					.WithTemplateParameter("action", context => context.Action)
 					.WithTemplateParameter("id", context => context.Id)
 					.WithTemplateParameter("flag", context => context.Flag);
 
-			using (HttpRequestMessage requestMessage = requestBuilder.BuildRequestMessage(HttpMethod.Get))
+			using (HttpRequestMessage requestMessage = requestBuilder.BuildRequestMessage(HttpMethod.Get, testParameterContext))
 			{
 				Assert.AreEqual(
 					new Uri(baseUri, "foo/1?flag=True"),
@@ -98,7 +97,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit.Tests
 			}
 
 			testParameterContext.Flag = false;
-			using (HttpRequestMessage requestMessage = requestBuilder.BuildRequestMessage(HttpMethod.Get))
+			using (HttpRequestMessage requestMessage = requestBuilder.BuildRequestMessage(HttpMethod.Get, testParameterContext))
 			{
 				Assert.AreEqual(
 					new Uri(baseUri, "foo/1?flag=False"),
@@ -109,7 +108,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit.Tests
 			testParameterContext.Action = "diddly";
 			testParameterContext.Id = -17;
 			testParameterContext.Flag = null;
-			using (HttpRequestMessage requestMessage = requestBuilder.BuildRequestMessage(HttpMethod.Get))
+			using (HttpRequestMessage requestMessage = requestBuilder.BuildRequestMessage(HttpMethod.Get, testParameterContext))
 			{
 				Assert.AreEqual(
 					new Uri(baseUri, "diddly/-17"),

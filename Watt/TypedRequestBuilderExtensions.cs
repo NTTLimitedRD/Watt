@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Net;
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
 using System.Net.Http.Formatting;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace DD.Cloud.WebApi.TemplateToolkit
 {
@@ -41,6 +39,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		/// <returns>
 		///		The configured <see cref="HttpRequestMessage"/>.
 		/// </returns>
+		[SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", Justification = "Request content is owned by request message.")]
 		public static HttpRequestMessage BuildRequestMessage<TContext>(this IHttpRequestBuilder<TContext> requestBuilder, HttpMethod method, TContext context, object requestBody, string mediaType, Uri baseUri = null)
 		{
 			if (requestBuilder == null)

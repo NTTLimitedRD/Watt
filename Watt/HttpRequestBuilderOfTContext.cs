@@ -35,12 +35,12 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		/// <summary>
 		///		No query parameters.
 		/// </summary>
-		static readonly ImmutableDictionary<string, Func<TContext, string>>				NoQueryParameters = ImmutableDictionary.Create<string, Func<TContext, string>>(StringComparer.OrdinalIgnoreCase);
+		static readonly ImmutableDictionary<string, IValueProvider<TContext, string>>	NoQueryParameters = ImmutableDictionary.Create<string, IValueProvider<TContext, string>>(StringComparer.OrdinalIgnoreCase);
 
 		/// <summary>
 		///		No template parameters.
 		/// </summary>
-		static readonly ImmutableDictionary<string, Func<TContext, string>>				NoTemplateParameters = ImmutableDictionary.Create<string, Func<TContext, string>>(StringComparer.OrdinalIgnoreCase);
+		static readonly ImmutableDictionary<string, IValueProvider<TContext, string>>	NoTemplateParameters = ImmutableDictionary.Create<string, IValueProvider<TContext, string>>(StringComparer.OrdinalIgnoreCase);
 
 		#endregion // Constants
 
@@ -54,32 +54,27 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		/// <summary>
 		///		Is the request URI a template?
 		/// </summary>
-		readonly bool														_isTemplate;
+		readonly bool																	_isTemplate;
 
 		/// <summary>
 		///		The URI query parameters (if any).
 		/// </summary>
-		readonly ImmutableDictionary<string, Func<TContext, string>>		_queryParameters = NoQueryParameters; 
+		readonly ImmutableDictionary<string, IValueProvider<TContext, string>>			_queryParameters = NoQueryParameters; 
 
 		/// <summary>
 		///		The URI template parameters (if any).
 		/// </summary>
-		readonly ImmutableDictionary<string, Func<TContext, string>>		_templateParameters = NoTemplateParameters; 
+		readonly ImmutableDictionary<string, IValueProvider<TContext, string>>			_templateParameters = NoTemplateParameters; 
 
 		/// <summary>
 		///		Delegates that perform configuration of outgoing request messages.
 		/// </summary>
-		readonly ImmutableList<Action<HttpRequestMessage, TContext>>		_requestConfigurationActions;
+		readonly ImmutableList<Action<HttpRequestMessage, TContext>>					_requestConfigurationActions;
 
 		/// <summary>
 		///		The media-type formatters to use.
 		/// </summary>
-		readonly ImmutableHashSet<MediaTypeFormatter>						_mediaTypeFormatters = HttpRequestBuilder.NoMediaTypeFormatters;
-
-		/// <summary>
-		///		The default object (if any) used by the request builder when resolving deferred template parameters.
-		/// </summary>
-		readonly TContext													_context;
+		readonly ImmutableHashSet<MediaTypeFormatter>									_mediaTypeFormatters = HttpRequestBuilder.NoMediaTypeFormatters;
 
 		#endregion // State
 		
@@ -116,7 +111,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		/// <param name="requestUriTemplateParameters">
 		///		Request template parameters.
 		/// </param>
-		protected HttpRequestBuilder(HttpRequestBuilder<TContext> requestBuilder, Uri requestUri, ImmutableDictionary<string, Func<TContext, string>> requestUriTemplateParameters)
+		protected HttpRequestBuilder(HttpRequestBuilder<TContext> requestBuilder, Uri requestUri, ImmutableDictionary<string, IValueProvider<TContext, string>> requestUriTemplateParameters)
 			: this(requestBuilder, requestUri, isTemplate: true)
 		{
 			if (requestBuilder == null)
@@ -140,7 +135,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		/// <param name="queryParameters">
 		///		The new query parameters.
 		/// </param>
-		protected HttpRequestBuilder(HttpRequestBuilder<TContext> requestBuilder, ImmutableDictionary<string, Func<TContext, string>> queryParameters)
+		protected HttpRequestBuilder(HttpRequestBuilder<TContext> requestBuilder, ImmutableDictionary<string, IValueProvider<TContext, string>> queryParameters)
 			: this(requestBuilder)
 		{
 			if (requestBuilder == null)
@@ -171,21 +166,6 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		}
 
 		/// <summary>
-		///		Create a new HTTP request builder from an existing HTTP request builder, but attached to a new <see cref="System.Net.Http.HttpClient"/>.
-		/// </summary>
-		/// <param name="requestBuilder">
-		///		The existing <see cref="HttpRequestBuilder{TContext}"/>.
-		/// </param>
-		/// <param name="context">
-		///		The default object to be used by the request builder when resolving deferred template parameters.
-		/// </param>
-		protected HttpRequestBuilder(HttpRequestBuilder<TContext> requestBuilder, TContext context)
-			: this(requestBuilder)
-		{
-			_context = context;
-		}
-
-		/// <summary>
 		///		Create a new HTTP request builder from an existing HTTP request builder.
 		/// </summary>
 		/// <param name="requestBuilder">
@@ -194,18 +174,17 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		/// <remarks>
 		///		Copy constructor.
 		/// </remarks>
-		protected HttpRequestBuilder(HttpRequestBuilder<TContext> requestBuilder)
+		HttpRequestBuilder(HttpRequestBuilder<TContext> requestBuilder)
 		{
 			if (requestBuilder == null)
 				throw new ArgumentNullException("requestBuilder");
 
-			_requestUri = requestBuilder._requestUri;
-			_isTemplate = requestBuilder._isTemplate;
+			_requestUri = requestBuilder.RequestUri;
+			_isTemplate = requestBuilder.IsTemplate;
 			_requestConfigurationActions = requestBuilder._requestConfigurationActions;
 			_queryParameters = requestBuilder._queryParameters;
 			_templateParameters = requestBuilder._templateParameters;
 			_mediaTypeFormatters = requestBuilder._mediaTypeFormatters;
-			_context = requestBuilder._context;
 		}
 
 		/// <summary>
@@ -314,7 +293,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 
 		#endregion // Construction
 
-		#region Properties
+			#region Properties
 
 		/// <summary>
 		///		The request URI.
@@ -354,7 +333,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		///		The URI template parameters (if any).
 		/// </summary>
 		[NotNull]
-		public IReadOnlyDictionary<string, Func<TContext, string>> TemplateParameters
+		public IReadOnlyDictionary<string, IValueProvider<TContext, string>> TemplateParameters
 		{
 			get
 			{
@@ -371,23 +350,6 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			get
 			{
 				return _mediaTypeFormatters;
-			}
-		}
-
-		/// <summary>
-		///		The request builder's intrinsic context.
-		/// </summary>
-		/// <remarks>
-		///		The intrinsic context is the default object (if any) used by the request builder when resolving deferred template parameters.
-		///		If a different context is specified when building a request message, then that context will be used instead.
-		/// 
-		///		Warning - HTTP request builders that have intrinsic context are only thread-safe if their context is thread-safe.
-		/// </remarks>
-		public TContext Context
-		{
-			get
-			{
-				return _context;
 			}
 		}
 
@@ -455,9 +417,6 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		{
 			if (httpMethod == null)
 				throw new ArgumentNullException("httpMethod");
-
-			if (Equals(context, default(TContext)))
-				context = _context;
 
 			// Ensure we have an absolute URI.
 			// TODO: Tidy this up.
@@ -672,7 +631,39 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 
 			return new HttpRequestBuilder<TContext>(this, requestConfigurationActions);
 		}
-		
+
+		/// <summary>
+		///		Create a copy of the request builder with the specified request URI query parameter.
+		/// </summary>
+		/// <typeparam name="T">
+		///		The parameter data-type.
+		/// </typeparam>
+		/// <param name="name">
+		///		The parameter name.
+		/// </param>
+		/// <param name="valueProvider">
+		///		Delegate that, given the current context, returns the parameter value (cannot be <c>null</c>).
+		/// </param>
+		/// <returns>
+		///		The new <see cref="HttpRequestBuilder{TContext}"/>.
+		/// </returns>
+		public HttpRequestBuilder<TContext> WithQueryParameter<T>(string name, [NotNull] IValueProvider<TContext, T> valueProvider)
+		{
+			if (String.IsNullOrWhiteSpace(name))
+				throw new ArgumentException("Argument cannot be null, empty, or composed entirely of whitespace: 'name'.", "name");
+
+			if (valueProvider == null)
+				throw new ArgumentNullException("valueProvider");
+
+			return new HttpRequestBuilder<TContext>(
+				this,
+				queryParameters: _queryParameters.SetItem(
+					key: name,
+					value: valueProvider.ConvertToString()
+				)
+			);
+		}
+
 		/// <summary>
 		///		Create a copy of the request builder with the specified request URI query parameter.
 		/// </summary>
@@ -696,17 +687,9 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			if (getValue == null)
 				throw new ArgumentNullException("getValue");
 
-			return new HttpRequestBuilder<TContext>(
-				this,
-				queryParameters: _queryParameters.SetItem(
-					key: name,
-					value: context =>
-					{
-						T value = getValue(context);
-
-						return value != null ? value.ToString() : null;
-					}
-				)
+			return WithQueryParameter(
+				name,
+				ValueProvider<TContext>.FromSelector(getValue)
 			);
 		}
 
@@ -733,17 +716,9 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			if (getValue == null)
 				throw new ArgumentNullException("getValue");
 
-			return new HttpRequestBuilder<TContext>(
-				this,
-				queryParameters: _queryParameters.SetItem(
-					key: name,
-					value: context =>
-					{
-						T value = getValue();
-
-						return value != null ? value.ToString() : null;
-					}
-				)
+			return WithQueryParameter(
+				name,
+				ValueProvider<TContext>.FromFunction(getValue)
 			);
 		}
 
@@ -756,14 +731,14 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		/// <returns>
 		///		The new <see cref="HttpRequestBuilder{TContext}"/>.
 		/// </returns>
-		public HttpRequestBuilder<TContext> WithQueryParameters(IEnumerable<KeyValuePair<string, Func<TContext, string>>> queryParameters)
+		public HttpRequestBuilder<TContext> WithQueryParameters(IEnumerable<KeyValuePair<string, IValueProvider<TContext, string>>> queryParameters)
 		{
 			if (queryParameters == null)
 				throw new ArgumentNullException("queryParameters");
 
 			bool modified = false;
-			ImmutableDictionary<string, Func<TContext, string>>.Builder queryParametersBuilder = _queryParameters.ToBuilder();
-			foreach (KeyValuePair<string, Func<TContext, string>> queryParameter in queryParameters)
+			ImmutableDictionary<string, IValueProvider<TContext, string>>.Builder queryParametersBuilder = _queryParameters.ToBuilder();
+			foreach (KeyValuePair<string, IValueProvider<TContext, string>> queryParameter in queryParameters)
 			{
 				if (queryParameter.Value == null)
 				{
@@ -842,6 +817,39 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		/// <param name="name">
 		///		The parameter name.
 		/// </param>
+		/// <param name="valueProvider">
+		///		A <see cref="IValueProvider{TSource, TValue}">value provider</see> that, given the current context, returns the parameter value.
+		/// </param>
+		/// <returns>
+		///		The new <see cref="HttpRequestBuilder{TContext}"/>.
+		/// </returns>
+		public HttpRequestBuilder<TContext> WithTemplateParameter<T>(string name, [NotNull] IValueProvider<TContext, T> valueProvider)
+		{
+			if (String.IsNullOrWhiteSpace(name))
+				throw new ArgumentException("Argument cannot be null, empty, or composed entirely of whitespace: 'name'.", "name");
+
+			if (valueProvider == null)
+				throw new ArgumentNullException("valueProvider");
+
+			return new HttpRequestBuilder<TContext>(
+				this,
+				_requestUri,
+				_templateParameters.SetItem(
+					key: name,
+					value: valueProvider.ConvertToString()
+				)
+			);
+		}
+
+		/// <summary>
+		///		Create a copy of the request builder with the specified request URI template parameter.
+		/// </summary>
+		/// <typeparam name="T">
+		///		The parameter data-type.
+		/// </typeparam>
+		/// <param name="name">
+		///		The parameter name.
+		/// </param>
 		/// <param name="getValue">
 		///		Delegate that, given the current context, returns the parameter value (cannot be <c>null</c>).
 		/// </param>
@@ -861,12 +869,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 				_requestUri,
 				_templateParameters.SetItem(
 					key: name,
-					value: context =>
-					{
-						T value = getValue(context);
-
-						return value != null ? value.ToString() : null;
-					}
+					value: ValueProvider<TContext>.FromSelector(getValue).ConvertToString()
 				)
 			);
 		}
@@ -899,12 +902,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 				_requestUri,
 				_templateParameters.SetItem(
 					key: name,
-					value: context =>
-					{
-						T value = getValue();
-						
-						return value != null ? value.ToString() : null;
-					}
+					value: ValueProvider<TContext>.FromFunction(getValue).ConvertToString()
 				)
 			);
 		}
@@ -918,14 +916,14 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		/// <returns>
 		///		The new <see cref="HttpRequestBuilder{TContext}"/>.
 		/// </returns>
-		public HttpRequestBuilder<TContext> WithTemplateParameters(IEnumerable<KeyValuePair<string, Func<TContext, string>>> templateParameters)
+		public HttpRequestBuilder<TContext> WithTemplateParameters(IEnumerable<KeyValuePair<string, IValueProvider<TContext, string>>> templateParameters)
 		{
 			if (templateParameters == null)
 				throw new ArgumentNullException("templateParameters");
 
 			bool modified = false;
-			ImmutableDictionary<string, Func<TContext, string>>.Builder templateParametersBuilder = _templateParameters.ToBuilder();
-			foreach (KeyValuePair<string, Func<TContext, string>> templateParameter in templateParameters)
+			ImmutableDictionary<string, IValueProvider<TContext, string>>.Builder templateParametersBuilder = _templateParameters.ToBuilder();
+			foreach (KeyValuePair<string, IValueProvider<TContext, string>> templateParameter in templateParameters)
 			{
 				if (templateParameter.Value == null)
 				{
@@ -1069,23 +1067,6 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			);
 		}
 
-		/// <summary>
-		///		Create a copy of the request builder, but with the specified default context.
-		/// </summary>
-		/// <param name="context">
-		///		The object to use, if one is not specified when building request messages, as the context for resolving template and query parameters.
-		/// </param>
-		/// <returns>
-		///		The new <see cref="HttpRequestBuilder{TContext}"/>.
-		/// </returns>
-		public HttpRequestBuilder<TContext> WithContext(TContext context)
-		{
-			if (Equals(_context, context))
-				return this;
-
-			return new HttpRequestBuilder<TContext>(this, context);
-		}
-
 		#endregion // Configuration
 
 		#region Helpers
@@ -1145,9 +1126,9 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 				return requestUri;
 
 			NameValueCollection queryParameters = requestUri.ParseQueryString();
-			foreach (KeyValuePair<string, Func<TContext, string>> queryParameter in _queryParameters)
+			foreach (KeyValuePair<string, IValueProvider<TContext, string>> queryParameter in _queryParameters)
 			{
-				string queryParameterValue = queryParameter.Value(context);
+				string queryParameterValue = queryParameter.Value.Get(context);
 				if (queryParameterValue != null)
 					queryParameters[queryParameter.Key] = queryParameterValue;
 				else
@@ -1177,7 +1158,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 						return new
 						{
 							templateParameter.Key,
-							Value = templateParameter.Value(context)
+							Value = templateParameter.Value.Get(context)
 						};
 					}
 				)

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Formatting;
@@ -36,6 +37,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		/// <returns>
 		///		The configured <see cref="HttpRequestMessage"/>.
 		/// </returns>
+		[SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", Justification = "Request content is owned by request message.")]
 		public static HttpRequestMessage BuildRequestMessage(this IHttpRequestBuilder requestBuilder, HttpMethod method, object requestBody, string mediaType, Uri baseUri = null)
 		{
 			if (requestBuilder == null)
@@ -142,6 +144,9 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		/// <typeparam name="TContext">
 		///		The type of object used by the request builder when resolving deferred template parameters.
 		/// </typeparam>
+		/// <typeparam name="TValue">
+		///		The type of value used to populate the header.
+		/// </typeparam>
 		/// <param name="requestBuilder">
 		///		The HTTP request builder.
 		/// </param>
@@ -154,7 +159,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		/// <returns>
 		///		The new <see cref="HttpRequestBuilder{TContext}"/>.
 		/// </returns>
-		public static HttpRequestBuilder<TContext> WithHeader<TContext>(this HttpRequestBuilder<TContext> requestBuilder, string headerName, string headerValue)
+		public static HttpRequestBuilder<TContext> WithHeader<TContext, TValue>(this HttpRequestBuilder<TContext> requestBuilder, string headerName, TValue headerValue)
 		{
 			if (requestBuilder == null)
 				throw new ArgumentNullException("requestBuilder");
@@ -167,7 +172,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 
 			return requestBuilder.WithHeader(
 				headerName,
-				context => headerValue
+				ValueProvider<TContext>.FromConstantValue(headerValue)
 			);
 		}
 
@@ -202,7 +207,52 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 
 			return requestBuilder.WithHeader(
 				headerName,
-				context => getValue()
+				ValueProvider<TContext>.FromFunction(
+					() => getValue()
+				)
+			);
+		}
+
+		/// <summary>
+		///		Create a copy of the request builder that adds a header with its value obtained from the specified delegate.
+		/// </summary>
+		/// <typeparam name="TContext">
+		///		The type of object used by the request builder when resolving deferred template parameters.
+		/// </typeparam>
+		/// <param name="requestBuilder">
+		///		The HTTP request builder.
+		/// </param>
+		/// <param name="headerName">
+		///		The header name.
+		/// </param>
+		/// <param name="valueProvider">
+		///		A <see cref="IValueProvider{TSource, TValue}">value provider</see> that returns the header value for each request.
+		/// </param>
+		/// <returns>
+		///		The new <see cref="HttpRequestBuilder{TContext}"/>.
+		/// </returns>
+		public static HttpRequestBuilder<TContext> WithHeader<TContext>(this HttpRequestBuilder<TContext> requestBuilder, string headerName, IValueProvider<TContext, string> valueProvider)
+		{
+			if (requestBuilder == null)
+				throw new ArgumentNullException("requestBuilder");
+
+			if (String.IsNullOrWhiteSpace(headerName))
+				throw new ArgumentException("Argument cannot be null, empty, or composed entirely of whitespace: 'name'.", "headerName");
+
+			if (valueProvider == null)
+				throw new ArgumentNullException("valueProvider");
+
+			return requestBuilder.WithRequestConfiguration(
+				(request, context) =>
+				{
+					request.Headers.Remove(headerName);
+
+					string headerValue = valueProvider.Get(context);
+					if (headerValue == null)
+						return;
+
+					request.Headers.Add(headerName, headerValue);
+				}
 			);
 		}
 
@@ -235,17 +285,11 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			if (getValue == null)
 				throw new ArgumentNullException("getValue");
 
-			return requestBuilder.WithRequestConfiguration(
-				(request, context) =>
-				{
-					request.Headers.Remove(headerName);
-
-					string headerValue = getValue(context);
-					if (headerValue == null)
-						return;
-
-					request.Headers.Add(headerName, headerValue);
-				}
+			return requestBuilder.WithHeader(
+				headerName,
+				ValueProvider<TContext>.FromSelector(
+					context => getValue(context)
+				)
 			);
 		}
 
@@ -363,7 +407,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			if (parameters == null)
 				throw new ArgumentNullException("parameters");
 
-			IDictionary<string, Func<TContext, string>> templateParameters = parameters.ToDeferredParameterDictionary<TContext, TParameters>();
+			IDictionary<string, IValueProvider<TContext, string>> templateParameters = parameters.ToDeferredParameterDictionary<TContext, TParameters>();
 			
 			return requestBuilder.WithTemplateParameters(templateParameters);
 		}
@@ -537,11 +581,9 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			if (String.IsNullOrWhiteSpace(name))
 				throw new ArgumentException("Argument cannot be null, empty, or composed entirely of whitespace: 'name'.", "name");
 
-			string parameterValue = value != null ? value.ToString() : null;
-
 			return requestBuilder.WithQueryParameter(
 				name,
-				getValue: () => parameterValue
+				ValueProvider<TContext>.FromConstantValue(value)
 			);
 		}
 
@@ -572,7 +614,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			if (parameters == null)
 				throw new ArgumentNullException("parameters");
 
-			IDictionary<string, Func<TContext, string>> queryParameters = parameters.ToDeferredParameterDictionary<TContext, TParameters>();
+			IDictionary<string, IValueProvider<TContext, string>> queryParameters = parameters.ToDeferredParameterDictionary<TContext, TParameters>();
 
 			return requestBuilder.WithQueryParameters(queryParameters);
 		}
@@ -701,32 +743,6 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			return requestBuilder.WithoutMediaTypeFormatters(mediaTypeFormatters);
 		}
 
-		/// <summary>
-		///		Create a copy of the request builder, but with the specified default context.
-		/// </summary>
-		/// <typeparam name="TContext">
-		///		The type of object used by the request builder when resolving deferred template parameters.
-		/// </typeparam>
-		/// <param name="requestBuilder">
-		///		The HTTP request builder.
-		/// </param>
-		/// <returns>
-		///		The new <see cref="HttpRequestBuilder{TContext}"/>.
-		/// </returns>
-		public static HttpRequestBuilder<TContext> WithoutContext<TContext>(this HttpRequestBuilder<TContext> requestBuilder)
-		{
-			if (requestBuilder == null)
-				throw new ArgumentNullException("requestBuilder");
-
-			TContext noContext = default(TContext);
-			
-			return
-				!Equals(requestBuilder.Context, noContext) ?
-					requestBuilder.WithContext(noContext)
-					:
-					requestBuilder;
-		}
-
 		#endregion // Configuration
 
 		#region Media type formatters
@@ -775,26 +791,28 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		///		The object whose properties will form the parameters.
 		/// </param>
 		/// <returns>
-		///		The returned dictionary is case-insensitive.
+		///		The dictionary.
 		/// </returns>
-		static IDictionary<string, Func<TContext, string>> ToDeferredParameterDictionary<TContext, TParameters>(this TParameters parameters)
+		/// <remarks>
+		///		The returned dictionary is case-insensitive.
+		/// </remarks>
+		static IDictionary<string, IValueProvider<TContext, string>> ToDeferredParameterDictionary<TContext, TParameters>(this TParameters parameters)
 		{
 			if (Equals(parameters, null))
 				throw new ArgumentNullException("parameters");
 
-			Dictionary<string, Func<TContext, string>> parameterDictionary = new Dictionary<string, Func<TContext, string>>(StringComparer.OrdinalIgnoreCase);
+			Dictionary<string, IValueProvider<TContext, string>> parameterDictionary = new Dictionary<string, IValueProvider<TContext, string>>(StringComparer.OrdinalIgnoreCase);
 			foreach (PropertyInfo property in typeof(TParameters).GetProperties(BindingFlags.Instance | BindingFlags.Public))
 			{
 				// Ignore write-only properties.
 				if (!property.CanRead)
 					continue;
 
-				parameterDictionary[property.Name] = context =>
-				{
-					object value = property.GetValue(parameters);
-
-					return value != null ? value.ToString() : null;
-				};
+				parameterDictionary[property.Name] =
+					ValueProvider<TContext>.FromSelector(
+						context => property.GetValue(parameters)
+					)
+					.ConvertToString();
 			}
 
 			return parameterDictionary;

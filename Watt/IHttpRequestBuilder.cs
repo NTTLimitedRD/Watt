@@ -86,7 +86,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		/// <summary>
 		///		The URI template parameters (if any).
 		/// </summary>
-		IReadOnlyDictionary<string, Func<TContext, string>> TemplateParameters
+		IReadOnlyDictionary<string, IValueProvider<TContext, string>> TemplateParameters
 		{
 			get;
 		}

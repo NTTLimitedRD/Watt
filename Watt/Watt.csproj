@@ -38,7 +38,7 @@
     <CodeAnalysisRuleSet>..\DD Cloud.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-  <Reference Include="JetBrains.Annotations, Version=9.1.1.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
+    <Reference Include="JetBrains.Annotations, Version=9.1.1.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
       <HintPath>..\packages\JetBrains.Annotations.9.1.1\lib\net20\JetBrains.Annotations.dll</HintPath>
       <Private>True</Private>
     </Reference>
@@ -70,6 +70,7 @@
     </Compile>
     <Compile Include="ClientBuilderExtensions.cs" />
     <Compile Include="HttpClientBuilder.cs" />
+    <Compile Include="IValueProvider.cs" />
     <Compile Include="OtherHttpMethods.cs" />
     <Compile Include="HttpClientExtensions.cs" />
     <Compile Include="HttpRequestBuilderOfTContext.cs" />
@@ -96,6 +97,7 @@
     <Compile Include="UriTemplate.cs" />
     <Compile Include="UriTemplateException.cs" />
     <Compile Include="Utilities\UriHelper.cs" />
+    <Compile Include="ValueProvider.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
