@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
 	<metadata minClientVersion="2.8">
 		<id>Watt</id>
-		<version>1.0.3.2</version>
+		<version>1.0.3.3</version>
 		<title>WebAPI template toolkit</title>
 		<authors>adam.friedman@itaas.dimensiondata.com</authors>
 		<owners>Dimension Data</owners>
