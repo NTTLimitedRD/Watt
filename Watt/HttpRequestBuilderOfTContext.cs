@@ -186,7 +186,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			_templateParameters = requestBuilder._templateParameters;
 			_mediaTypeFormatters = requestBuilder._mediaTypeFormatters;
 		}
-
+		
 		/// <summary>
 		///		Create a new HTTP request builder from an existing HTTP request builder, but with a different request URI.
 		/// </summary>
@@ -293,7 +293,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 
 		#endregion // Construction
 
-			#region Properties
+		#region Properties
 
 		/// <summary>
 		///		The request URI.
@@ -659,7 +659,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 				this,
 				queryParameters: _queryParameters.SetItem(
 					key: name,
-					value: valueProvider.ConvertToString()
+					value: valueProvider.Convert().ValueToString()
 				)
 			);
 		}
@@ -836,7 +836,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 				_requestUri,
 				_templateParameters.SetItem(
 					key: name,
-					value: valueProvider.ConvertToString()
+					value: valueProvider.Convert().ValueToString()
 				)
 			);
 		}
@@ -869,7 +869,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 				_requestUri,
 				_templateParameters.SetItem(
 					key: name,
-					value: ValueProvider<TContext>.FromSelector(getValue).ConvertToString()
+					value: ValueProvider<TContext>.FromSelector(getValue).Convert().ValueToString()
 				)
 			);
 		}
@@ -902,7 +902,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 				_requestUri,
 				_templateParameters.SetItem(
 					key: name,
-					value: ValueProvider<TContext>.FromFunction(getValue).ConvertToString()
+					value: ValueProvider<TContext>.FromFunction(getValue).Convert().ValueToString()
 				)
 			);
 		}

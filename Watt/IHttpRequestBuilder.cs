@@ -112,4 +112,32 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		[NotNull]
 		HttpRequestMessage BuildRequestMessage(HttpMethod httpMethod, TContext context, HttpContent body = null, Uri baseUri = null);
 	}
+
+	/// <summary>
+	///		Represents a cloning facility for an HTTP request builder.
+	/// </summary>
+	/// <typeparam name="TContext">
+	///		The type of object used by the request builder when resolving deferred template parameters.
+	/// </typeparam>
+	interface ICloneableHttpRequestBuilder<in TContext>
+		: IHttpRequestBuilder
+	{
+		/// <summary>
+		///		Create copies of the request builder's URI template parameters (if any), converted for a more-derived context type.
+		/// </summary>
+		/// <typeparam name="TDerivedContext">
+		///		A context type derived from <typeparamref name="TContext"/> that the new template parameters will retrieve their values from.
+		/// </typeparam>
+		IEnumerable<KeyValuePair<string, IValueProvider<TDerivedContext, string>>> ConvertTemplateParameters<TDerivedContext>()
+			where TDerivedContext : TContext;
+
+		/// <summary>
+		///		Create copies of the request builder's query parameters (if any), converted for a more-derived context type.
+		/// </summary>
+		/// <typeparam name="TDerivedContext">
+		///		A context type derived from <typeparamref name="TContext"/> that the new query parameters will retrieve their values from.
+		/// </typeparam>
+		IEnumerable<KeyValuePair<string, IValueProvider<TDerivedContext, string>>> ConvertQueryParameters<TDerivedContext>()
+			where TDerivedContext : TContext;
+	}
 }

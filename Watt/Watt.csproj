@@ -98,6 +98,8 @@
     <Compile Include="UriTemplateException.cs" />
     <Compile Include="Utilities\UriHelper.cs" />
     <Compile Include="ValueProvider.cs" />
+    <Compile Include="ValueProviderConversion.cs" />
+    <Compile Include="ValueProviderExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

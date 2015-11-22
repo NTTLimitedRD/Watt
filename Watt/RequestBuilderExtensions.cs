@@ -812,7 +812,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 					ValueProvider<TContext>.FromSelector(
 						context => property.GetValue(parameters)
 					)
-					.ConvertToString();
+					.Convert().ValueToString();
 			}
 
 			return parameterDictionary;

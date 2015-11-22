@@ -143,6 +143,17 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			}
 
 			/// <summary>
+			///		Perform a conversion on the value provider.
+			/// </summary>
+			public ValueProviderConversion<TContext, TValue> Convert
+			{
+				get
+				{
+					return new ValueProviderConversion<TContext, TValue>(this);
+				}
+			}
+
+			/// <summary>
 			///		Extract the value from the specified context.
 			/// </summary>
 			/// <param name="source">	
@@ -186,6 +197,17 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			}
 
 			/// <summary>
+			///		Perform a conversion on the value provider.
+			/// </summary>
+			public ValueProviderConversion<TContext, TValue> Convert
+			{
+				get
+				{
+					return new ValueProviderConversion<TContext, TValue>(this);
+				}
+			}
+
+			/// <summary>
 			///		Extract the value from the specified context.
 			/// </summary>
 			/// <param name="source">	
@@ -203,65 +225,4 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			}
 		}
 	}
-
-	/// <summary>
-	///		Extension methods for <see cref="IValueProvider{TSource, TValue}"/>s.
-	/// </summary>
-	public static class ValueProviderExtensions
-	{
-		/// <summary>
-		///		Wrap the specified value provider in a value provider that converts its value to a string.
-		/// </summary>
-		/// <typeparam name="TContext">
-		///		The type used as a context for each request.
-		/// </typeparam>
-		/// <typeparam name="TValue">
-		///		The type of value provided by the inner value provider.
-		/// </typeparam>
-		/// <param name="valueProvider">
-		///		The value provider whose value is to be converted.
-		/// </param>
-		/// <returns>
-		///		The outer (converting) value provider.
-		/// </returns>
-		/// <remarks>
-		///		If the underlying value is <c>null</c> then the converted string value will be <c>null</c>, too.
-		/// </remarks>
-		public static IValueProvider<TContext, string> ConvertToString<TContext, TValue>(this IValueProvider<TContext, TValue> valueProvider)
-		{
-			if (valueProvider == null)
-				throw new ArgumentNullException("valueProvider");
-
-			return ValueProvider<TContext>.FromSelector(
-				context =>
-				{
-					TValue value = valueProvider.Get(context);
-
-					return value != null ? value.ToString() : null;
-				}
-			);
-		}
-
-		/// <summary>
-		///		Wrap the specified value provider in a value provider that converts its value to a string.
-		/// </summary>
-		/// <typeparam name="TContext">
-		///		The type used as a context for each request.
-		/// </typeparam>
-		/// <param name="valueProvider">
-		///		The value provider whose value is to be converted.
-		/// </param>
-		/// <returns>
-		///		The outer (converting) value provider.
-		/// </returns>
-		/// <remarks>
-		///		If the underlying value is <c>null</c> then the converted string value will be <c>null</c>, too.
-		/// 
-		///		This overload exists purely to prevent double-conversion of values that are already strings.
-		/// </remarks>
-		public static IValueProvider<TContext, string> ConvertToString<TContext>(this IValueProvider<TContext, string> valueProvider)
-		{
-			return valueProvider;
-		}
-    }
 }
