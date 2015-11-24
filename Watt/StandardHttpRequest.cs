@@ -71,7 +71,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			if (baseUri == null)
 				throw new ArgumentNullException("baseUri");
 
-			return Json<TContext>(new Uri(baseUri), jsonFormatter);
+			return Json<TContext>(new Uri(baseUri, UriKind.RelativeOrAbsolute), jsonFormatter);
 		}
 
 		/// <summary>
@@ -157,7 +157,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			if (baseUri == null)
 				throw new ArgumentNullException("baseUri");
 
-			return Xml<TContext>(new Uri(baseUri), useXmlSerializer);
+			return Xml<TContext>(new Uri(baseUri, UriKind.RelativeOrAbsolute), useXmlSerializer);
 		}
 
 		/// <summary>

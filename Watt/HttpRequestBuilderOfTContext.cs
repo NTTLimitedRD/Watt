@@ -1097,12 +1097,34 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			if (relativeUri == null)
 				throw new ArgumentNullException("relativeUri");
 
-			// Retain URI-concatenation semantics, except that we behave the same whether trailing slash is present or absent.
-			UriBuilder baseUriBuilder = new UriBuilder(baseUri);
-			if (!baseUriBuilder.Path.EndsWith("/", StringComparison.Ordinal))
-				baseUriBuilder.Path += "/";
+			if (relativeUri.IsAbsoluteUri)
+				return relativeUri;
 
-			return new Uri(baseUri, relativeUri);
+			if (baseUri.IsAbsoluteUri)
+			{
+				// Retain URI-concatenation semantics, except that we behave the same whether trailing slash is present or absent.
+				UriBuilder uriBuilder = new UriBuilder(baseUri);
+				if (!uriBuilder.Path.EndsWith("/", StringComparison.Ordinal))
+					uriBuilder.Path += "/";
+
+				uriBuilder.Path += relativeUri; // AF: Yeah, but what if relativeUri starts with a slash? IsAbsoluteUri refers to host and port, not path.
+
+				return uriBuilder.Uri;
+			}
+
+			// Irritatingly, you can't use UriBuilder with a relative path.
+			StringBuilder combinedUriBuilder = new StringBuilder(baseUri.ToString());
+
+			if (combinedUriBuilder.Length == 0 | combinedUriBuilder[combinedUriBuilder.Length - 1] == '/')
+				combinedUriBuilder.Append("/");
+
+			// Ensure we don't wind up with a double-slash.
+			int insertionIndex = combinedUriBuilder.Length;
+			combinedUriBuilder.Append(relativeUri);
+			if (combinedUriBuilder[insertionIndex] == '/')
+				combinedUriBuilder.Remove(insertionIndex, 1);
+
+			return new Uri(combinedUriBuilder.ToString(), UriKind.Relative);
 		}
 
 		/// <summary>
