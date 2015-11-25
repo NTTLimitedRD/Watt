@@ -122,14 +122,14 @@ namespace DD.Cloud.WebApi.TemplateToolkit.Utilities
 			{
 				// Retain URI-concatenation semantics, except that we behave the same whether trailing slash is present or absent.
 				UriBuilder uriBuilder = new UriBuilder(baseUri);
-				uriBuilder.Path = AppendPaths(uriBuilder.Path, relativeUri.OriginalString);
+				uriBuilder.Path = AppendPaths(uriBuilder.Path, relativeUri.ToString());
 
 				return uriBuilder.Uri;
 			}
 			else // Irritatingly, you can't use UriBuilder with a relative path.
 			{
 				return new Uri(
-					AppendPaths(baseUri.OriginalString, relativeUri.OriginalString),
+					AppendPaths(baseUri.ToString(), relativeUri.ToString()),
 					UriKind.Relative
 				);
 			}
