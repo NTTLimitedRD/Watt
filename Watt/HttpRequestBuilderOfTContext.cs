@@ -427,7 +427,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 					throw new InvalidOperationException("Cannot build a request message; the request builder does not have an absolute request URI, and no base URI was supplied.");
 
 				// Make relative to base URI.
-				requestUri = AppendRelativeUri(baseUri, requestUri);
+				requestUri = baseUri.AppendRelativeUri(requestUri);
 			}
 			else
 			{
@@ -528,7 +528,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 
 			return new HttpRequestBuilder<TContext>(
 				requestBuilder: this,
-				requestUri: AppendRelativeUri(baseUri, _requestUri)
+				requestUri: baseUri.AppendRelativeUri(_requestUri)
 			);
 		}
 
@@ -593,7 +593,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 
 			return new HttpRequestBuilder<TContext>(
 				this,
-				AppendRelativeUri(_requestUri, relativeUri),
+				_requestUri.AppendRelativeUri(relativeUri),
 				isTemplate: _isTemplate
 			);
 		}
@@ -1070,62 +1070,6 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		#endregion // Configuration
 
 		#region Helpers
-
-		/// <summary>
-		///		Append a relative URI to the specified base URI.
-		/// </summary>
-		/// <param name="baseUri">
-		///		The base URI.
-		/// 
-		///		A trailing "/" will be appended, if necessary.
-		/// </param>
-		/// <param name="relativeUri">
-		///		The relative URI to append.
-		/// </param>
-		/// <returns>
-		///		The concatenated URI.
-		/// </returns>
-		/// <remarks>
-		///		This function is required because, sometimes, appending of a relative path to a URI can behave counter-intuitively.
-		///		If the base URI does not have a trailing "/", then its last path segment is *replaced* by the relative UI. This is hardly ever what you actually want.
-		/// </remarks>
-		static Uri AppendRelativeUri(Uri baseUri, Uri relativeUri)
-		{
-			if (baseUri == null)
-				throw new ArgumentNullException("baseUri");
-
-			if (relativeUri == null)
-				throw new ArgumentNullException("relativeUri");
-
-			if (relativeUri.IsAbsoluteUri)
-				return relativeUri;
-
-			if (baseUri.IsAbsoluteUri)
-			{
-				// Retain URI-concatenation semantics, except that we behave the same whether trailing slash is present or absent.
-				UriBuilder uriBuilder = new UriBuilder(baseUri);
-				if (!uriBuilder.Path.EndsWith("/", StringComparison.Ordinal))
-					uriBuilder.Path += "/";
-
-				uriBuilder.Path += relativeUri; // AF: Yeah, but what if relativeUri starts with a slash? IsAbsoluteUri refers to host and port, not path.
-
-				return uriBuilder.Uri;
-			}
-
-			// Irritatingly, you can't use UriBuilder with a relative path.
-			StringBuilder combinedUriBuilder = new StringBuilder(baseUri.ToString());
-
-			if (combinedUriBuilder.Length == 0 | combinedUriBuilder[combinedUriBuilder.Length - 1] == '/')
-				combinedUriBuilder.Append("/");
-
-			// Ensure we don't wind up with a double-slash.
-			int insertionIndex = combinedUriBuilder.Length;
-			combinedUriBuilder.Append(relativeUri);
-			if (combinedUriBuilder[insertionIndex] == '/')
-				combinedUriBuilder.Remove(insertionIndex, 1);
-
-			return new Uri(combinedUriBuilder.ToString(), UriKind.Relative);
-		}
 
 		/// <summary>
 		///		Merge the request builder's query parameters (if any) into the request URI.
