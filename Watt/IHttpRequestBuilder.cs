@@ -1,6 +1,7 @@
 ﻿using JetBrains.Annotations;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Net.Http;
 using System.Net.Http.Formatting;
 
@@ -123,11 +124,26 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		: IHttpRequestBuilder
 	{
 		/// <summary>
+		///		Create copies of the request builder's request-configuration actions, converted for a more-derived context type.
+		/// </summary>
+		/// <typeparam name="TDerivedContext">
+		///		A context type derived from <typeparamref name="TContext"/> that the new query parameters will retrieve their values from.
+		/// </typeparam>
+		/// <returns>
+		///		A sequence of request-configuration actions.
+		/// </returns>
+		IEnumerable<Action<HttpRequestMessage, TDerivedContext>> ConvertRequestConfigurationActions<TDerivedContext>()
+			where TDerivedContext : TContext;
+
+		/// <summary>
 		///		Create copies of the request builder's URI template parameters (if any), converted for a more-derived context type.
 		/// </summary>
 		/// <typeparam name="TDerivedContext">
 		///		A context type derived from <typeparamref name="TContext"/> that the new template parameters will retrieve their values from.
 		/// </typeparam>
+		/// <returns>
+		///		A sequence of <see cref="KeyValuePair{TKey,TValue}">key / value pairs</see> representing the template parameters.
+		/// </returns>
 		IEnumerable<KeyValuePair<string, IValueProvider<TDerivedContext, string>>> ConvertTemplateParameters<TDerivedContext>()
 			where TDerivedContext : TContext;
 
@@ -137,7 +153,18 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		/// <typeparam name="TDerivedContext">
 		///		A context type derived from <typeparamref name="TContext"/> that the new query parameters will retrieve their values from.
 		/// </typeparam>
+		/// <returns>
+		///		A sequence of <see cref="KeyValuePair{TKey,TValue}">key / value pairs</see> representing the query parameters.
+		/// </returns>
 		IEnumerable<KeyValuePair<string, IValueProvider<TDerivedContext, string>>> ConvertQueryParameters<TDerivedContext>()
 			where TDerivedContext : TContext;
+
+		/// <summary>
+		///		Get the media-type formatters for the request builder.
+		/// </summary>
+		/// <returns>
+		///		An immutable hash-set of media-type formatters.
+		/// </returns>
+		ImmutableHashSet<MediaTypeFormatter> GetMediaTypeFormatters();
 	}
 }

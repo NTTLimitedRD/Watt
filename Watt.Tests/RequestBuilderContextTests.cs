@@ -173,9 +173,67 @@ namespace DD.Cloud.WebApi.TemplateToolkit.Tests
 		}
 
 		/// <summary>
+		///		Verify that a request builder can build and then invoke request with an absolute and then relative template URI (with query parameters) and then converted to a more-derived context type, with deferred values that come from a supplied more-derived context value.
+		/// </summary>
+		/// <returns>
+		///		A <see cref="Task"/> representing asynchronous test execution.
+		/// </returns>
+		[TestMethod]
+		public async Task Can_Invoke_GetRequest_RelativeTemplateUriWithQuery_DeferredValues_FromConversionToDerivedContext()
+		{
+			Uri baseUri = new Uri("http://localhost:1234/");
+
+			Uri expectedUri = null;
+			MockMessageHandler mockHandler = new MockMessageHandler(
+				requestMessage =>
+				{
+					Assert.AreEqual(
+						expectedUri,
+						requestMessage.RequestUri
+					);
+
+					return requestMessage.CreateResponse(HttpStatusCode.OK);
+				}
+			);
+
+			DerivedTestParameterContext testParameterContext = new DerivedTestParameterContext();
+			using (HttpClient client = new HttpClient(mockHandler))
+			{
+				HttpRequestBuilder<TestParameterContext> requestBuilder =
+					HttpRequestBuilder.Create<TestParameterContext>(baseUri)
+						.WithRelativeRequestUri("{action}/{id}")
+						.WithTemplateParameter("action", context => context.Action)
+						.WithTemplateParameter("id", context => context.Id);
+
+				HttpRequestBuilder<DerivedTestParameterContext> derivedRequestBuilder =
+					requestBuilder.WithDerivedContext<DerivedTestParameterContext>()
+						.WithRelativeRequestUri("data/{derivedOnly?}")
+						.WithTemplateParameter("derivedOnly", context => context.DerivedOnly);
+
+				testParameterContext.Action = "foo";
+				testParameterContext.Id = 7;
+                testParameterContext.DerivedOnly = new Guid("9b880cce-64b1-469f-989b-4326938e43a9");
+
+				expectedUri = new Uri(baseUri, "foo/7");
+				await client.GetAsync(requestBuilder, testParameterContext);
+
+				expectedUri = new Uri(baseUri, "foo/7/data/9b880cce-64b1-469f-989b-4326938e43a9");
+				await client.GetAsync(derivedRequestBuilder, testParameterContext);
+
+				testParameterContext.DerivedOnly = null;
+
+				expectedUri = new Uri(baseUri, "foo/7");
+				await client.GetAsync(requestBuilder, testParameterContext);
+
+				expectedUri = new Uri(baseUri, "foo/7/data/");
+				await client.GetAsync(derivedRequestBuilder, testParameterContext);
+			}
+		}
+
+		/// <summary>
 		///		A parameter-resolution context class used for tests.
 		/// </summary>
-		sealed class TestParameterContext
+		class TestParameterContext
 		{
 			/// <summary>
 			///		The "Action" parameter.
@@ -199,6 +257,19 @@ namespace DD.Cloud.WebApi.TemplateToolkit.Tests
 			///		The "Flag" parameter.
 			/// </summary>
 			public bool? Flag
+			{
+				get;
+				set;
+			}
+		}
+
+		/// <summary>
+		///		A parameter context derived from <see cref="TestParameterContext"/> (used to test conversions).
+		/// </summary>
+		class DerivedTestParameterContext
+			: TestParameterContext
+		{
+			public Guid? DerivedOnly
 			{
 				get;
 				set;

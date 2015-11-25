@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DD.Cloud.WebApi.TemplateToolkit
 {
@@ -103,7 +99,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			///		Extract the value from the specified context.
 			/// </summary>
 			/// <param name="source">	
-			///		The <typeparamref name="TContext"/> instance from which the value is to be extracted.
+			///		The TContext instance from which the value is to be extracted.
 			/// </param>
 			/// <returns>
 			///		The value.
@@ -143,21 +139,10 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			}
 
 			/// <summary>
-			///		Perform a conversion on the value provider.
-			/// </summary>
-			public ValueProviderConversion<TContext, TValue> Convert
-			{
-				get
-				{
-					return new ValueProviderConversion<TContext, TValue>(this);
-				}
-			}
-
-			/// <summary>
 			///		Extract the value from the specified context.
 			/// </summary>
 			/// <param name="source">	
-			///		The <typeparamref name="TContext"/> instance from which the value is to be extracted.
+			///		The TContext instance from which the value is to be extracted.
 			/// </param>
 			/// <returns>
 			///		The value.
@@ -197,21 +182,10 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			}
 
 			/// <summary>
-			///		Perform a conversion on the value provider.
-			/// </summary>
-			public ValueProviderConversion<TContext, TValue> Convert
-			{
-				get
-				{
-					return new ValueProviderConversion<TContext, TValue>(this);
-				}
-			}
-
-			/// <summary>
 			///		Extract the value from the specified context.
 			/// </summary>
 			/// <param name="source">	
-			///		The <typeparamref name="TContext"/> instance from which the value is to be extracted.
+			///		The TContext instance from which the value is to be extracted.
 			/// </param>
 			/// <returns>
 			///		The value.

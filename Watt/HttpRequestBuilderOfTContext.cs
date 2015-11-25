@@ -23,7 +23,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 	/// </typeparam>
 	[DebuggerDisplay("{RequestUri}")]
 	public class HttpRequestBuilder<TContext>
-		: IHttpRequestBuilder<TContext>
+		: IHttpRequestBuilder<TContext>, ICloneableHttpRequestBuilder<TContext>
 	{
 		#region Constants
 
@@ -185,6 +185,49 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			_queryParameters = requestBuilder._queryParameters;
 			_templateParameters = requestBuilder._templateParameters;
 			_mediaTypeFormatters = requestBuilder._mediaTypeFormatters;
+		}
+
+		/// <summary>
+		///		Create a new HTTP request builder using information from another request builder and its converted (down-cast) configuration.
+		/// </summary>
+		/// <param name="cloneFrom">
+		///		The <see cref="IHttpRequestBuilder"/> from which to copy configuration that does not depend on <typeparamref name="TContext"/>.
+		/// </param>
+		/// <param name="requestConfigurationActions">
+		///		The source <paramref name="cloneFrom">request builder</paramref>'s converted (down-cast) request configuration actions.
+		/// </param>
+		/// <param name="templateParameters">
+		///		The source <paramref name="cloneFrom">request builder</paramref>'s converted (down-cast) template parameters.
+		/// </param>
+		/// <param name="queryParameters">
+		///		The source <paramref name="cloneFrom">request builder</paramref>'s converted (down-cast) query parameters.
+		/// </param>
+		/// <param name="mediaTypeFormatters">
+		///		The source <paramref name="cloneFrom">request builder</paramref>'s immutable has-set of media-type formatters.
+		/// </param>
+		HttpRequestBuilder(
+			IHttpRequestBuilder cloneFrom,
+			IEnumerable<Action<HttpRequestMessage, TContext>> requestConfigurationActions,
+			IEnumerable<KeyValuePair<string, IValueProvider<TContext, string>>> templateParameters,
+			IEnumerable<KeyValuePair<string, IValueProvider<TContext, string>>> queryParameters,
+			ImmutableHashSet<MediaTypeFormatter> mediaTypeFormatters
+		)
+		{
+			if (cloneFrom == null)
+				throw new ArgumentNullException("cloneFrom");
+
+			if (templateParameters == null)
+				throw new ArgumentNullException("templateParameters");
+
+			if (queryParameters == null)
+				throw new ArgumentNullException("queryParameters");
+
+			_requestUri = cloneFrom.RequestUri;
+			_isTemplate = cloneFrom.IsTemplate;
+			_requestConfigurationActions = ImmutableList.CreateRange(requestConfigurationActions);
+			_templateParameters = ImmutableDictionary.CreateRange(templateParameters);
+			_queryParameters = ImmutableDictionary.CreateRange(queryParameters);
+			_mediaTypeFormatters = mediaTypeFormatters;
 		}
 		
 		/// <summary>
@@ -1068,6 +1111,111 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 		}
 
 		#endregion // Configuration
+
+		#region Context conversion
+
+		/*
+			This implementation of context down-cast looks a little awkward from the inside (because it is),
+			but for library consumers this sort of complexity is sufficiently encapsulated that I'm ok with it.
+			Still, someday I'd like to revisit this to see if it can be improved.
+		*/
+
+		/// <summary>
+		///		Create a copy of the request builder, but targeting a different context type derived from <typeparamref name="TContext"/>.
+		/// </summary>
+		/// <typeparam name="TDerivedContext">
+		///		The derived context type.
+		/// </typeparam>
+		/// <returns>
+		///		The new request builder.
+		/// </returns>
+		public HttpRequestBuilder<TDerivedContext> WithDerivedContext<TDerivedContext>() // TODO: Also enable conversion from Unit.
+			where TDerivedContext : TContext
+		{
+			HttpRequestBuilder<TDerivedContext> alreadyCompatible = this as HttpRequestBuilder<TDerivedContext>;
+			if (alreadyCompatible != null)
+				return alreadyCompatible;
+			
+			ICloneableHttpRequestBuilder<TContext> cloneFrom = this;
+
+			return new HttpRequestBuilder<TDerivedContext>(
+				cloneFrom,
+				cloneFrom.ConvertRequestConfigurationActions<TDerivedContext>(),
+				cloneFrom.ConvertTemplateParameters<TDerivedContext>(),
+				cloneFrom.ConvertQueryParameters<TDerivedContext>(),
+				cloneFrom.GetMediaTypeFormatters()
+			);
+		}
+
+		/// <summary>
+		///		Create copies of the request builder's request-configuration actions, converted for a more-derived context type.
+		/// </summary>
+		/// <typeparam name="TDerivedContext">
+		///		A context type derived from <typeparamref name="TContext"/> that the new query parameters will retrieve their values from.
+		/// </typeparam>
+		/// <returns>
+		///		A sequence of request-configuration actions.
+		/// </returns>
+		IEnumerable<Action<HttpRequestMessage, TDerivedContext>> ICloneableHttpRequestBuilder<TContext>.ConvertRequestConfigurationActions<TDerivedContext>()
+		{
+			foreach (Action<HttpRequestMessage, TContext> requestConfigurationAction in _requestConfigurationActions)
+			{
+				yield return (request, context) => requestConfigurationAction(request, context);
+			}
+		}
+
+		/// <summary>
+		///		Create copies of the request builder's URI template parameters (if any), converted for a more-derived context type.
+		/// </summary>
+		/// <typeparam name="TDerivedContext">
+		///		A context type derived from <typeparamref name="TContext"/> that the new template parameters will retrieve their values from.
+		/// </typeparam>
+		/// <returns>
+		///		A sequence of <see cref="KeyValuePair{TKey,TValue}">key / value pairs</see> representing the template parameters.
+		/// </returns>
+		IEnumerable<KeyValuePair<string, IValueProvider<TDerivedContext, string>>> ICloneableHttpRequestBuilder<TContext>.ConvertTemplateParameters<TDerivedContext>()
+		{
+			foreach (KeyValuePair<string, IValueProvider<TContext, string>> templateParameter in _templateParameters)
+			{
+				yield return new KeyValuePair<string, IValueProvider<TDerivedContext, string>>(
+					templateParameter.Key,
+					templateParameter.Value.Convert().ContextTo<TDerivedContext>()
+				);
+			}
+		}
+
+		/// <summary>
+		///		Create copies of the request builder's query parameters (if any), converted for a more-derived context type.
+		/// </summary>
+		/// <typeparam name="TDerivedContext">
+		///		A context type derived from <typeparamref name="TContext"/> that the new query parameters will retrieve their values from.
+		/// </typeparam>
+		/// <returns>
+		///		A sequence of <see cref="KeyValuePair{TKey,TValue}">key / value pairs</see> representing the query parameters.
+		/// </returns>
+		IEnumerable<KeyValuePair<string, IValueProvider<TDerivedContext, string>>> ICloneableHttpRequestBuilder<TContext>.ConvertQueryParameters<TDerivedContext>()
+		{
+			foreach (KeyValuePair<string, IValueProvider<TContext, string>> queryParameter in _queryParameters)
+			{
+				yield return new KeyValuePair<string, IValueProvider<TDerivedContext, string>>(
+					queryParameter.Key,
+					queryParameter.Value.Convert().ContextTo<TDerivedContext>()
+				);
+			}
+		}
+
+		/// <summary>
+		///		Get the media-type formatters for the request builder.
+		/// </summary>
+		/// <returns>
+		///		An immutable hash-set of media-type formatters.
+		/// </returns>
+		ImmutableHashSet<MediaTypeFormatter> ICloneableHttpRequestBuilder<TContext>.GetMediaTypeFormatters()
+		{
+			return _mediaTypeFormatters;
+		}
+
+		#endregion // Context conversion
 
 		#region Helpers
 
