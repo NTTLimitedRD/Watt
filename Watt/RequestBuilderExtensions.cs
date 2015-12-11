@@ -801,6 +801,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			if (Equals(parameters, null))
 				throw new ArgumentNullException("parameters");
 
+			// Reflection might be "slow", but it's still blazingly fast compared to making a request over the network.
 			Dictionary<string, IValueProvider<TContext, string>> parameterDictionary = new Dictionary<string, IValueProvider<TContext, string>>(StringComparer.OrdinalIgnoreCase);
 			foreach (PropertyInfo property in typeof(TParameters).GetProperties(BindingFlags.Instance | BindingFlags.Public))
 			{
