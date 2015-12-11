@@ -17,107 +17,6 @@ namespace DD.Cloud.WebApi.TemplateToolkit.Tests
 	public sealed class RequestBuilderContextTests
 	{
 		/// <summary>
-		///		Verify that a request builder can build a request with an absolute and then relative template URI (with query parameters) with deferred values that come from a supplied context value.
-		/// </summary>
-		[TestMethod]
-		public void Can_Build_Request_RelativeTemplateUriWithQuery_DeferredValues_FromContext()
-		{
-			Uri baseUri = new Uri("http://localhost:1234/");
-
-			HttpRequestBuilder<TestParameterContext> requestBuilder =
-				HttpRequestBuilder.Create<TestParameterContext>(baseUri)
-					.WithRelativeRequestUri("{action}/{id}?flag={flag?}")
-					.WithTemplateParameter("action", context => context.Action)
-					.WithTemplateParameter("id", context => context.Id)
-					.WithTemplateParameter("flag", context => context.Flag);
-
-			TestParameterContext testParameterContext = new TestParameterContext
-			{
-				Action = "foo",
-				Id = 1,
-				Flag = true
-			};
-			using (HttpRequestMessage requestMessage = requestBuilder.BuildRequestMessage(HttpMethod.Get, testParameterContext))
-			{
-				Assert.AreEqual(
-					new Uri(baseUri, "foo/1?flag=True"),
-					requestMessage.RequestUri
-				);
-			}
-
-			testParameterContext.Flag = false;
-			using (HttpRequestMessage requestMessage = requestBuilder.BuildRequestMessage(HttpMethod.Get, testParameterContext))
-			{
-				Assert.AreEqual(
-					new Uri(baseUri, "foo/1?flag=False"),
-					requestMessage.RequestUri
-				);
-			}
-
-			testParameterContext.Action = "diddly";
-			testParameterContext.Id = -17;
-			testParameterContext.Flag = null;
-			using (HttpRequestMessage requestMessage = requestBuilder.BuildRequestMessage(HttpMethod.Get, testParameterContext))
-			{
-				Assert.AreEqual(
-					new Uri(baseUri, "diddly/-17"),
-					requestMessage.RequestUri
-				);
-			}
-		}
-
-		/// <summary>
-		///		Verify that a request builder can build a request with an absolute and then relative template URI (with query parameters) with deferred values that come from the request builder's default (intrinsic) context.
-		/// </summary>
-		[TestMethod]
-		public void Can_Build_Request_RelativeTemplateUriWithQuery_DeferredValues_FromDefaultContext()
-		{
-			Uri baseUri = new Uri("http://localhost:1234/");
-
-			TestParameterContext testParameterContext = new TestParameterContext
-			{
-				Action = "foo",
-				Id = 1,
-				Flag = true
-			};
-
-			HttpRequestBuilder<TestParameterContext> requestBuilder =
-				HttpRequestBuilder.Create<TestParameterContext>(baseUri)
-					.WithRelativeRequestUri("{action}/{id}?flag={flag?}")
-					.WithTemplateParameter("action", context => context.Action)
-					.WithTemplateParameter("id", context => context.Id)
-					.WithTemplateParameter("flag", context => context.Flag);
-
-			using (HttpRequestMessage requestMessage = requestBuilder.BuildRequestMessage(HttpMethod.Get, testParameterContext))
-			{
-				Assert.AreEqual(
-					new Uri(baseUri, "foo/1?flag=True"),
-					requestMessage.RequestUri
-				);
-			}
-
-			testParameterContext.Flag = false;
-			using (HttpRequestMessage requestMessage = requestBuilder.BuildRequestMessage(HttpMethod.Get, testParameterContext))
-			{
-				Assert.AreEqual(
-					new Uri(baseUri, "foo/1?flag=False"),
-					requestMessage.RequestUri
-				);
-			}
-
-			testParameterContext.Action = "diddly";
-			testParameterContext.Id = -17;
-			testParameterContext.Flag = null;
-			using (HttpRequestMessage requestMessage = requestBuilder.BuildRequestMessage(HttpMethod.Get, testParameterContext))
-			{
-				Assert.AreEqual(
-					new Uri(baseUri, "diddly/-17"),
-					requestMessage.RequestUri
-				);
-			}
-		}
-
-		/// <summary>
 		///		Verify that a request builder can build and then invoke request with an absolute and then relative template URI (with query parameters) with deferred values that come from a supplied context value.
 		/// </summary>
 		/// <returns>
@@ -227,6 +126,107 @@ namespace DD.Cloud.WebApi.TemplateToolkit.Tests
 
 				expectedUri = new Uri(baseUri, "foo/7/data/");
 				await client.GetAsync(derivedRequestBuilder, testParameterContext);
+			}
+		}
+
+		/// <summary>
+		///		Verify that a request builder can build a request with an absolute and then relative template URI (with query parameters) with deferred values that come from a supplied context value.
+		/// </summary>
+		[TestMethod]
+		public void Can_Build_Request_RelativeTemplateUriWithQuery_DeferredValues_FromContext()
+		{
+			Uri baseUri = new Uri("http://localhost:1234/");
+
+			HttpRequestBuilder<TestParameterContext> requestBuilder =
+				HttpRequestBuilder.Create<TestParameterContext>(baseUri)
+					.WithRelativeRequestUri("{action}/{id}?flag={flag?}")
+					.WithTemplateParameter("action", context => context.Action)
+					.WithTemplateParameter("id", context => context.Id)
+					.WithTemplateParameter("flag", context => context.Flag);
+
+			TestParameterContext testParameterContext = new TestParameterContext
+			{
+				Action = "foo",
+				Id = 1,
+				Flag = true
+			};
+			using (HttpRequestMessage requestMessage = requestBuilder.BuildRequestMessage(HttpMethod.Get, testParameterContext))
+			{
+				Assert.AreEqual(
+					new Uri(baseUri, "foo/1?flag=True"),
+					requestMessage.RequestUri
+				);
+			}
+
+			testParameterContext.Flag = false;
+			using (HttpRequestMessage requestMessage = requestBuilder.BuildRequestMessage(HttpMethod.Get, testParameterContext))
+			{
+				Assert.AreEqual(
+					new Uri(baseUri, "foo/1?flag=False"),
+					requestMessage.RequestUri
+				);
+			}
+
+			testParameterContext.Action = "diddly";
+			testParameterContext.Id = -17;
+			testParameterContext.Flag = null;
+			using (HttpRequestMessage requestMessage = requestBuilder.BuildRequestMessage(HttpMethod.Get, testParameterContext))
+			{
+				Assert.AreEqual(
+					new Uri(baseUri, "diddly/-17"),
+					requestMessage.RequestUri
+				);
+			}
+		}
+
+		/// <summary>
+		///		Verify that a request builder can build a request with an absolute and then relative template URI (with query parameters) with deferred values that come from the request builder's default (intrinsic) context.
+		/// </summary>
+		[TestMethod]
+		public void Can_Build_Request_RelativeTemplateUriWithQuery_DeferredValues_FromDefaultContext()
+		{
+			Uri baseUri = new Uri("http://localhost:1234/");
+
+			TestParameterContext testParameterContext = new TestParameterContext
+			{
+				Action = "foo",
+				Id = 1,
+				Flag = true
+			};
+
+			HttpRequestBuilder<TestParameterContext> requestBuilder =
+				HttpRequestBuilder.Create<TestParameterContext>(baseUri)
+					.WithRelativeRequestUri("{action}/{id}?flag={flag?}")
+					.WithTemplateParameter("action", context => context.Action)
+					.WithTemplateParameter("id", context => context.Id)
+					.WithTemplateParameter("flag", context => context.Flag);
+
+			using (HttpRequestMessage requestMessage = requestBuilder.BuildRequestMessage(HttpMethod.Get, testParameterContext))
+			{
+				Assert.AreEqual(
+					new Uri(baseUri, "foo/1?flag=True"),
+					requestMessage.RequestUri
+				);
+			}
+
+			testParameterContext.Flag = false;
+			using (HttpRequestMessage requestMessage = requestBuilder.BuildRequestMessage(HttpMethod.Get, testParameterContext))
+			{
+				Assert.AreEqual(
+					new Uri(baseUri, "foo/1?flag=False"),
+					requestMessage.RequestUri
+				);
+			}
+
+			testParameterContext.Action = "diddly";
+			testParameterContext.Id = -17;
+			testParameterContext.Flag = null;
+			using (HttpRequestMessage requestMessage = requestBuilder.BuildRequestMessage(HttpMethod.Get, testParameterContext))
+			{
+				Assert.AreEqual(
+					new Uri(baseUri, "diddly/-17"),
+					requestMessage.RequestUri
+				);
 			}
 		}
 
