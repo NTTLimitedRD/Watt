@@ -21,7 +21,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit.Utilities
 		/// <exception cref="AggregateException">
 		///		One or more aggregated disposables throw exceptions during disposal.
 		/// </exception>
-		public static IDisposable ToAggregateDisposable(this IEnumerable<IDisposable> disposables)
+		public static AggregateDisposable ToAggregateDisposable(this IEnumerable<IDisposable> disposables)
 		{
 			if (disposables == null)
 				throw new ArgumentNullException(nameof(disposables));
@@ -34,7 +34,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit.Utilities
 		/// <summary>
 		///		Implements disposal of multiple <see cref="IDisposable"/>s.
 		/// </summary>
-		struct AggregateDisposable
+		public struct AggregateDisposable
 			: IDisposable
 		{
 			/// <summary>
@@ -62,7 +62,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit.Utilities
 			public void Dispose()
 			{
 				List<Exception> disposalExceptions = new List<Exception>();
-				foreach (IDisposable disposable in _disposables) // AF: What about exception in enumerator?
+				foreach (IDisposable disposable in _disposables)
 				{
 					try
 					{
