@@ -109,27 +109,28 @@ namespace DD.Cloud.WebApi.TemplateToolkit
 			else
 				uriBuilder.Append('/');
 
-			if (_querySegments.Count > 0)
+			bool isFirstParameterWithValue = true;
+			foreach (QuerySegment segment in _querySegments)
 			{
-				Action<QuerySegment, char> appendSegment = (segment, separator) =>
+				string queryParameterValue = segment.GetValue(evaluationContext);
+				if (queryParameterValue == null)
+					continue;
+
+				// Different prefix for first parameter that has a value.
+				if (isFirstParameterWithValue)
 				{
-					string queryParameterValue = segment.GetValue(evaluationContext);
-					if (queryParameterValue == null)
-						return;
+					uriBuilder.Append('?');
 
-					string queryParameterName = segment.QueryParameterName;
+					isFirstParameterWithValue = false;
+				}
+				else
+					uriBuilder.Append('&');
 
-					uriBuilder.Append(separator);
-					uriBuilder.AppendFormat(
-						"{0}={1}",
-						queryParameterName,
-						Uri.EscapeDataString(queryParameterValue)
-					);
-				};
-
-				appendSegment(_querySegments[0], '?');
-				for (int segmentIndex = 1; segmentIndex < _querySegments.Count; segmentIndex++)
-					appendSegment(_querySegments[segmentIndex], '&');
+				uriBuilder.AppendFormat(
+					"{0}={1}",
+					segment.QueryParameterName,
+					Uri.EscapeDataString(queryParameterValue)
+				);
 			}
 
 			return new Uri(uriBuilder.ToString(), UriKind.RelativeOrAbsolute);
