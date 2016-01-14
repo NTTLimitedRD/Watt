@@ -24,7 +24,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit.Utilities
 		public static AggregateDisposable ToAggregateDisposable(this IEnumerable<IDisposable> disposables)
 		{
 			if (disposables == null)
-				throw new ArgumentNullException(nameof(disposables));
+				return new AggregateDisposable();
 
 			return new AggregateDisposable(disposables);
 		}
