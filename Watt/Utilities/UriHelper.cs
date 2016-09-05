@@ -73,7 +73,7 @@ namespace DD.Cloud.WebApi.TemplateToolkit.Utilities
 			};
 
 			StringBuilder queryBuilder = new StringBuilder();
-			
+
 			// First parameter has no prefix.
 			addQueryParameter(queryBuilder, 0);
 
@@ -107,43 +107,35 @@ namespace DD.Cloud.WebApi.TemplateToolkit.Utilities
 		///		This function is required because, sometimes, appending of a relative path to a URI can behave counter-intuitively.
 		///		If the base URI does not have a trailing "/", then its last path segment is *replaced* by the relative UI. This is hardly ever what you actually want.
 		/// </remarks>
-		internal static Uri AppendRelativeUri(this Uri baseUri, Uri relativeUri)
+		public static Uri AppendRelativeUri(this Uri baseUri, Uri relativeUri)
 		{
 			if (baseUri == null)
-				throw new ArgumentNullException("baseUri");
+				throw new ArgumentNullException(nameof(baseUri));
 
 			if (relativeUri == null)
-				throw new ArgumentNullException("relativeUri");
+				throw new ArgumentNullException(nameof(relativeUri));
 
 			if (relativeUri.IsAbsoluteUri)
 				return relativeUri;
 
-			if (baseUri.IsAbsoluteUri)
-			{
-				// Retain URI-concatenation semantics, except that we behave the same whether trailing slash is present or absent.
-				UriBuilder uriBuilder = new UriBuilder(baseUri);
-				
-				string[] relativePathAndQuery =
-					relativeUri.ToString().Split(
-						new[] { '?' },
-						count: 2,
-						options: StringSplitOptions.RemoveEmptyEntries
-					);
+			if (!baseUri.IsAbsoluteUri)
+				return new Uri(AppendPaths(baseUri.ToString(), relativeUri.ToString()), UriKind.Relative);
 
-				uriBuilder.Path = AppendPaths(uriBuilder.Path, relativePathAndQuery[0]);
-				if (relativePathAndQuery.Length == 2)
-					uriBuilder.Query = relativePathAndQuery[1];
+			UriBuilder uriBuilder = new UriBuilder(baseUri);
 
-				return uriBuilder.Uri;
-			}
-			
-			// Irritatingly, you can't use UriBuilder with a relative path.
-			{
-				return new Uri(
-					AppendPaths(baseUri.ToString(), relativeUri.ToString()),
-					UriKind.Relative
+			string[] relativePathAndQuery =
+				relativeUri.ToString().Split(
+					new char[1] { '?' },
+					count: 2,
+					options: StringSplitOptions.RemoveEmptyEntries
 				);
-			}
+
+			uriBuilder.Path = AppendPaths(uriBuilder.Path, relativePathAndQuery[0]);
+
+			if (relativePathAndQuery.Length == 2)
+				uriBuilder.Query = relativePathAndQuery[1];
+
+			return uriBuilder.Uri;
 		}
 
 		/// <summary>
@@ -167,17 +159,18 @@ namespace DD.Cloud.WebApi.TemplateToolkit.Utilities
 				throw new ArgumentNullException(nameof(relativePath));
 
 			StringBuilder pathBuilder = new StringBuilder(basePath);
-			if (pathBuilder.Length == 0 || pathBuilder[pathBuilder.Length - 1] != '/')
+
+			if (pathBuilder.Length == 0 || (int)pathBuilder[pathBuilder.Length - 1] != 47)
 				pathBuilder.Append("/");
 
 			int relativePathStartIndex =
-					(relativePath.Length > 0 && relativePath[0] == '/') ? 1 : 0;
+					(relativePath.Length <= 0 || (int)relativePath[0] != 47) ? 0 : 1;
 
 			pathBuilder.Append(
-				relativePath,
-				startIndex: (relativePath.Length > 0 && relativePath[0] == '/') ? 1 : 0,
+				relativePath, 
+				startIndex: (relativePath.Length <= 0 || relativePath[0] != 47) ? 0 : 1,
 				count: relativePath.Length - relativePathStartIndex
-			);
+				);
 
 			return pathBuilder.ToString();
 		}
